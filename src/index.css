@@ -1,68 +1,56 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.app { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+
+.cabecalho { text-align: center; margin-bottom: 24px; }
+.cabecalho h1 { font-size: 1.6rem; color: #0f172a; }
+.subtitulo { color: #64748b; margin-top: 4px; }
+
+.contadores {
+  display: flex; gap: 16px; justify-content: center;
+  flex-wrap: wrap; margin-bottom: 24px;
+}
+.contador {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 16px 28px; text-align: center; min-width: 180px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.contador .valor { display: block; font-size: 2rem; font-weight: 700; color: #1d4ed8; }
+.contador .rotulo { font-size: 0.85rem; color: #64748b; }
+
+.aviso-erro {
+  background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;
+  border-radius: 8px; padding: 12px; margin-bottom: 16px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+.mapa-bloco {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
-button:hover {
-  border-color: #646cff;
+.mapa { height: 480px; border-radius: 8px; z-index: 0; }
+
+.legenda { display: flex; gap: 20px; padding: 10px 8px 4px; font-size: 0.85rem; color: #475569; }
+.legenda-item { display: flex; align-items: center; gap: 6px; }
+.amostra { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+.cor-pais-ativo { background: rgba(37, 99, 235, 0.45); border: 1px solid #1e40af; }
+.cor-pin { background: #3b82f6; border-radius: 50%; border: 2px solid #1e3a8a; }
+
+.lista-missoes {
+  margin-top: 32px; background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 12px; padding: 20px;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.lista-missoes h2 { font-size: 1.1rem; margin-bottom: 12px; }
+.lista-missoes ul { list-style: none; }
+.lista-missoes li { padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+.badge {
+  display: inline-block; margin-left: 8px; padding: 2px 10px;
+  background: #eff6ff; color: #1d4ed8; border-radius: 999px; font-size: 0.8rem;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+.carregando { text-align: center; color: #64748b; padding: 40px 0; }
