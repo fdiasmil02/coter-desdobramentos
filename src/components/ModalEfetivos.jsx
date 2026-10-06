@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { nomePais } from '../paises'
+import { formatarData, formatarMesAno } from '../formatos'
 
 const CLASSE_SITUACAO = {
   'Na Missão': 'verde',
@@ -9,15 +10,6 @@ const CLASSE_SITUACAO = {
   'Previsto': 'azul',
   'Estendido': 'roxo',
   'Retornou': 'cinza'
-}
-
-function formatarData(valor) {
-  if (!valor) return '—'
-  if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
-    const [ano, mes, dia] = valor.split('-')
-    return `${dia}/${mes}/${ano}`
-  }
-  return valor
 }
 
 export default function ModalEfetivos({ missao, stats, aoFechar }) {
@@ -50,9 +42,9 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
     (filtroTipo === 'Todos' || e.tipo === filtroTipo)
   )
 
-  const mandato = missao.inicio_mandato
-    ? `${formatarData(missao.inicio_mandato)} a ${missao.fim_mandato ? formatarData(missao.fim_mandato) : 'Atual'}`
-    : '—'
+  const mandato = missao.data_inicio_mandato
+  ? `${formatarMesAno(missao.data_inicio_mandato)} a ${missao.data_fim_mandato ? formatarMesAno(missao.data_fim_mandato) : 'Atual'}`
+  : '—'
 
   return (
     <div className="modal-efetivos" onClick={aoFechar}>

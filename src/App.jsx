@@ -5,6 +5,7 @@ import { supabase } from './supabaseClient'
 import { nomePais } from './paises'
 import MapaPublico from './components/MapaPublico'
 import Contadores from './components/Contadores'
+import { formatarMesAno } from './formatos'
 
 export default function App() {
   const navegar = useNavigate()
@@ -111,7 +112,7 @@ export default function App() {
                       <span className="cm-local">📍 {m.qg_missao}, {nomePais(m.pais)}</span>
                       <div className="cm-rodape">
                         <span className="cm-mandato">
-                          {m.inicio_mandato ? `Mandato: ${m.inicio_mandato}` : ''}
+                          {m.data_inicio_mandato ? `Mandato: ${formatarMesAno(m.data_inicio_mandato)}` : ''}
                         </span>
                         <button className="cm-ver" onClick={() => setFocoMissao(m.id)}>
                           Ver no mapa →

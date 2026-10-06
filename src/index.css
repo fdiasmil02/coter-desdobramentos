@@ -399,3 +399,6 @@ body {
 }
 .botao-editar-card:hover { background: #243350; }
 .botao-editar-card span { color: #fb923c; }
+
+/* ---------- Ajustes do admin ---------- */
+.admin-instrucao { font-size: 0.85rem; color: #8fa1bb; }

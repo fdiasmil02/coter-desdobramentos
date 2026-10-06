@@ -1,4 +1,4 @@
-// Painel admin (layout Skip): abas com sublinhado + grade de missões com estatísticas
+// Painel admin: mesma headbar do mapa público + área de gestão conforme o protótipo
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
@@ -52,73 +52,78 @@ export default function PainelAdmin() {
   if (verificando) return <p className="carregando">Verificando acesso…</p>
 
   return (
-    <div className="app">
+    <>
+      {/* Headbar idêntica à da página do mapa público */}
       <header className="barra-superior">
         <div className="barra-marca">
-          <span className="emblema">🔒</span>
+          <span className="emblema">🕊️</span>
           <div>
-            <h1>Módulo Administrativo • Gestão de Efetivo</h1>
-            <p className="subtitulo">
-              Sessão autenticada • {perfil?.nome ?? 'usuário'} • Nível de Acesso: {perfil?.nivel ?? '—'}
-            </p>
+            <h1>Controle de Efetivos — Missões de Paz</h1>
+            <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
           </div>
         </div>
         <nav className="abas">
           <span className="aba inativa" onClick={() => navegar('/')}>🌐 Mapa Público</span>
-          <button className="botao-sair-barra" onClick={sair}>Sair</button>
+          <span className="aba ativa">🔒 Painel Admin</span>
+          {perfil?.nome && <span className="aba usuario-logado">👤 {perfil.nome}</span>}
         </nav>
       </header>
 
-      <nav className="admin-nav">
-        <button className="admin-nav-botao ativo">🗺️ Missões de Paz</button>
-        <button className="admin-nav-botao" disabled title="Etapa 2">👥 Efetivo Completo (com restritos)</button>
-        <button className="admin-nav-botao" disabled title="Etapa 3">📋 Cadastrar Desdobrado</button>
-        <button className="admin-nav-botao" disabled title="Etapa 4">📊 Relatórios de Rotação</button>
-      </nav>
+      <div className="app">
+        {/* Menu de abas do admin (sublinhado verde-água na ativa) */}
+        <nav className="admin-nav">
+          <button className="admin-nav-botao ativo">🗺️ Missões de Paz</button>
+          <button className="admin-nav-botao" disabled title="Próxima etapa">👥 Efetivo Completo (com restritos)</button>
+          <button className="admin-nav-botao" disabled title="Próxima etapa">📋 Cadastrar Desdobrado</button>
+          <button className="admin-nav-botao" disabled title="Próxima etapa">📊 Relatórios de Rotação</button>
+        </nav>
 
-      <section className="admin-secao">
-        <div className="admin-topo">
-          <h2>Missões de Paz</h2>
-          <button className="botao-nova-missao" onClick={() => setModalMissao('nova')}>
-            ➕ Nova Missão
-          </button>
-        </div>
-
-        {missoes.length === 0 ? (
-          <p className="carregando">Nenhuma missão cadastrada — clique em "Nova Missão" para começar.</p>
-        ) : (
-          <div className="grade-admin-missoes">
-            {missoes.map(m => {
-              const s = statsPorMissao[m.id]
-              return (
-                <div key={m.id} className="card-admin-missao">
-                  <div className="ca-topo">
-                    <strong>{m.sigla}</strong>
-                    <span className={`badge-status ${m.status === 'Ativa' ? '' : 'encerrada'}`}>
-                      {m.status}
-                    </span>
-                  </div>
-                  <span className="ca-pais">🌍 {nomePais(m.pais)}</span>
-                  <span className="ca-nome">{m.nome_completo}</span>
-                  <span className="ca-local">📍 {m.qg_missao}</span>
-                  <span className="ca-coords">
-                    {m.latitude && m.longitude
-                      ? `${Number(m.latitude).toFixed(2)}, ${Number(m.longitude).toFixed(2)}`
-                      : 'Coordenadas não definidas'}
-                  </span>
-                  {m.descricao && <p className="ca-descricao">{m.descricao}</p>}
-                  <div className="ca-rodape">
-                    <span className="ca-efetivo">{s ? Number(s.efetivo_total) : 0} integrantes</span>
-                    <button className="botao-editar-card" onClick={() => setModalMissao(m)}>
-                      <span>✏️</span> Editar
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+        <section className="admin-secao">
+          <div className="admin-topo">
+            <span className="admin-instrucao">
+              Missões cadastradas no sistema — clique em uma para editar ou crie uma nova.
+            </span>
+            <button className="botao-nova-missao" onClick={() => setModalMissao('nova')}>
+              ➕ Nova Missão
+            </button>
           </div>
-        )}
-      </section>
+
+          {missoes.length === 0 ? (
+            <p className="carregando">Nenhuma missão cadastrada — clique em "Nova Missão" para começar.</p>
+          ) : (
+            <div className="grade-admin-missoes">
+              {missoes.map(m => {
+                const s = statsPorMissao[m.id]
+                return (
+                  <div key={m.id} className="card-admin-missao">
+                    <div className="ca-topo">
+                      <strong>{m.sigla}</strong>
+                      <span className={`badge-status ${m.status === 'Ativa' ? '' : 'encerrada'}`}>
+                        {m.status}
+                      </span>
+                    </div>
+                    <span className="ca-pais">🌍 {nomePais(m.pais)}</span>
+                    <span className="ca-nome">{m.nome_completo}</span>
+                    <span className="ca-local">
+                      📍 {m.qg_missao}
+                      {m.latitude && m.longitude
+                        ? ` (${Number(m.latitude).toFixed(2)}, ${Number(m.longitude).toFixed(2)})`
+                        : ''}
+                    </span>
+                    {m.descricao && <p className="ca-descricao">{m.descricao}</p>}
+                    <div className="ca-rodape">
+                      <span className="ca-efetivo">{s ? Number(s.efetivo_total) : 0} integrantes</span>
+                      <button className="botao-editar-card" onClick={() => setModalMissao(m)}>
+                        <span>✏️</span> Editar
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      </div>
 
       {modalMissao && (
         <FormularioMissao
@@ -127,6 +132,6 @@ export default function PainelAdmin() {
           aoCancelar={() => setModalMissao(null)}
         />
       )}
-    </div>
+    </>
   )
 }

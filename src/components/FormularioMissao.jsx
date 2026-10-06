@@ -1,4 +1,4 @@
-// Formulário de missão — cria ou edita; coordenadas capturadas por clique no mini mapa
+// Formulário de missão — cria ou edita; mandato em mês/ano; coordenadas via mini mapa
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import { supabase } from '../supabaseClient'
@@ -30,7 +30,6 @@ function MiniMapa({ lat, lng, aoSelecionar }) {
     refMapa.current = mapa
   }, [])
 
-  // Sincroniza o marcador quando as coordenadas mudam pelo teclado
   useEffect(() => {
     if (refMarcador.current && lat && lng) refMarcador.current.setLatLng([Number(lat), Number(lng)])
   }, [lat, lng])
@@ -44,8 +43,9 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
   const [nomeCompleto, setNomeCompleto] = useState(missao?.nome_completo ?? '')
   const [qg, setQg] = useState(missao?.qg_missao ?? '')
   const [status, setStatus] = useState(missao?.status ?? 'Ativa')
-  const [inicioMandato, setInicioMandato] = useState(missao?.inicio_mandato ?? '')
-  const [fimMandato, setFimMandato] = useState(missao?.fim_mandato ?? '')
+  // Campos de mês/ano recebem "AAAA-MM" (corta o dia do valor salvo)
+  const [inicioMandato, setInicioMandato] = useState(missao?.data_inicio_mandato?.slice(0, 7) ?? '')
+  const [fimMandato, setFimMandato] = useState(missao?.data_fim_mandato?.slice(0, 7) ?? '')
   const [latitude, setLatitude] = useState(missao?.latitude ?? '')
   const [longitude, setLongitude] = useState(missao?.longitude ?? '')
   const [descricao, setDescricao] = useState(missao?.descricao ?? '')
@@ -63,8 +63,9 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
       nome_completo: nomeCompleto.trim(),
       qg_missao: qg.trim(),
       status,
-      inicio_mandato: inicioMandato || null,
-      fim_mandato: fimMandato || null,
+      // Guarda o dia 1º do mês escolhido (coluna date exige data completa)
+      data_inicio_mandato: inicioMandato ? `${inicioMandato}-01` : null,
+      data_fim_mandato: fimMandato ? `${fimMandato}-01` : null,
       latitude,
       longitude,
       descricao: descricao.trim() || null
@@ -96,12 +97,13 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
         <form className="form-missao" onSubmit={salvar}>
           <div>
             <label>Sigla da Missão *</label>
-            <input value={sigla} onChange={e => setSigla(e.target.value)} required placeholder="UNIFIL" />
+            <input value={sigla} onChange={e => setSigla(e.target.value)} required
+              placeholder="Sigla oficial da missão, em letras maiúsculas" />
           </div>
           <div>
             <label>País *</label>
             <select value={pais} onChange={e => setPais(e.target.value)} required>
-              <option value="">Selecione o país…</option>
+              <option value="">Selecione o país-sede da missão…</option>
               {LISTA_PAISES.map(p => (
                 <option key={p.codigo} value={p.codigo}>{p.nome}</option>
               ))}
@@ -110,11 +112,12 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
           <div className="campo-inteiro">
             <label>Nome Completo da Missão *</label>
             <input value={nomeCompleto} onChange={e => setNomeCompleto(e.target.value)} required
-              placeholder="Força Interina das Nações Unidas no Líbano" />
+              placeholder="Nome oficial completo da missão das Nações Unidas" />
           </div>
           <div>
             <label>Cidade-Sede *</label>
-            <input value={qg} onChange={e => setQg(e.target.value)} required placeholder="Naqoura" />
+            <input value={qg} onChange={e => setQg(e.target.value)} required
+              placeholder="Cidade onde funciona o Quartel-General" />
           </div>
           <div>
             <label>Status *</label>
@@ -124,32 +127,42 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
             </select>
           </div>
           <div>
-            <label>Início Mandato</label>
-            <input type="date" value={inicioMandato} onChange={e => setInicioMandato(e.target.value)} />
+            <label>Início do Mandato (mês/ano)</label>
+            <input type="month" value={inicioMandato}
+              onChange={e => setInicioMandato(e.target.value)}
+              placeholder="Mês e ano do início do mandato" />
           </div>
           <div>
-            <label>Fim Mandato / Renovação</label>
-            <input type="date" value={fimMandato} onChange={e => setFimMandato(e.target.value)} />
+            <label>Fim do Mandato / Renovação (mês/ano)</label>
+            <input type="month" value={fimMandato}
+              onChange={e => setFimMandato(e.target.value)}
+              placeholder="Deixe vazio se o mandato estiver em curso" />
           </div>
           <div>
             <label>Latitude *</label>
             <input type="number" step="any" value={latitude}
-              onChange={e => setLatitude(e.target.value)} required placeholder="33.37" />
+              onChange={e => setLatitude(e.target.value)} required
+              placeholder="Preenchido automaticamente ao clicar no mapa" />
           </div>
           <div>
             <label>Longitude *</label>
             <input type="number" step="any" value={longitude}
-              onChange={e => setLongitude(e.target.value)} required placeholder="35.49" />
+              onChange={e => setLongitude(e.target.value)} required
+              placeholder="Preenchido automaticamente ao clicar no mapa" />
           </div>
           <div className="campo-inteiro">
             <label>📍 Selecionar no mapa interativo (clique para marcar o QG)</label>
-            <MiniMapa lat={latitude} lng={longitude} aoSelecionar={(lat, lng) => { setLatitude(lat); setLongitude(lng) }} />
+            <MiniMapa
+              lat={latitude}
+              lng={longitude}
+              aoSelecionar={(lat, lng) => { setLatitude(lat); setLongitude(lng) }}
+            />
             <span className="dica-mapa">O clique preenche automaticamente latitude e longitude.</span>
           </div>
           <div className="campo-inteiro">
             <label>Descrição Resumida</label>
             <textarea value={descricao} onChange={e => setDescricao(e.target.value)}
-              placeholder="Resumo do mandato e da participação brasileira…" />
+              placeholder="Breve resumo do mandato da missão e da participação brasileira" />
           </div>
 
           {erro && <div className="aviso-erro campo-inteiro">Erro ao salvar: {erro}</div>}
