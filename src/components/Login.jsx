@@ -1,5 +1,5 @@
-// Página de login da equipe — autentica no Supabase e redireciona ao painel
-import { useState } from 'react'
+// Página de login — se o usuário já tem sessão ativa, vai direto ao painel
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
@@ -9,6 +9,13 @@ export default function Login() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState(null)
   const [aguardando, setAguardando] = useState(false)
+
+  // Já está logado? Pula o formulário e abre o painel
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session) navegar('/admin')
+    })
+  }, [navegar])
 
   async function entrar(evento) {
     evento.preventDefault()

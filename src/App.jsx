@@ -1,4 +1,4 @@
-// Página pública: contadores + mapa mundi + cards de missões (estilo protótipo)
+// Página pública: barra superior + contadores + mapa com painel lateral de missões
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
@@ -12,6 +12,22 @@ export default function App() {
   const [stats, setStats] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
+  const [logado, setLogado] = useState(null)
+  const [focoMissao, setFocoMissao] = useState(null)
+
+  // Indicador de sessão no cabeçalho
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const sessao = data?.session
+      if (!sessao) return setLogado(null)
+      const { data: perfil } = await supabase
+        .from('perfis')
+        .select('nome')
+        .eq('id', sessao.user.id)
+        .single()
+      setLogado(perfil?.nome ?? sessao.user.email)
+    })
+  }, [])
 
   useEffect(() => {
     async function carregarDados() {
@@ -32,69 +48,86 @@ export default function App() {
   const soma = campo => stats.reduce((total, s) => total + Number(s[campo] ?? 0), 0)
 
   return (
-    <div className="app">
-      <header className="cabecalho">
-        <div className="emblema">🕊️</div>
-        <h1>Controle de Efetivos — Missões de Paz</h1>
-        <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
+    <>
+      <header className="barra-superior">
+        <div className="barra-marca">
+          <span className="emblema">🕊️</span>
+          <div>
+            <h1>Controle de Efetivos — Missões de Paz</h1>
+            <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
+          </div>
+        </div>
         <nav className="abas">
           <span className="aba ativa">🌐 Mapa Público</span>
-          <span className="aba inativa" onClick={() => navegar('/login')}>🔒 Painel Admin</span>
+          <span className="aba inativa" onClick={() => navegar(logado ? '/admin' : '/login')}>
+            🔒 Painel Admin
+          </span>
+          {logado && <span className="aba usuario-logado">👤 {logado}</span>}
         </nav>
       </header>
 
-      <Contadores
-        totalEfetivo={soma('efetivo_total')}
-        totalEb={soma('efetivo_eb')}
-        totalPm={soma('efetivo_pm')}
-        totalMulheres={soma('efetivo_feminino')}
-        totalLeaving={soma('efetivo_leaving')}
-        totalMissoes={missoes.length}
-      />
+      <div className="app">
+        <Contadores
+          totalEfetivo={soma('efetivo_total')}
+          totalEb={soma('efetivo_eb')}
+          totalPm={soma('efetivo_pm')}
+          totalMulheres={soma('efetivo_feminino')}
+          totalLeaving={soma('efetivo_leaving')}
+          totalMissoes={missoes.length}
+        />
 
-      {erro && <div className="aviso-erro">Erro ao carregar dados: {erro}</div>}
+        {erro && <div className="aviso-erro">Erro ao carregar dados: {erro}</div>}
 
-      {carregando ? (
-        <p className="carregando">Carregando mapa…</p>
-      ) : (
-        <MapaPublico missoes={missoes} statsPorMissao={statsPorMissao} />
-      )}
-
-      <section className="lista-missoes">
-        <div className="lista-cabecalho">
-          <h2>Missões Desdobradas</h2>
-          <span className="badge">{missoes.length} Missões</span>
-        </div>
-        {missoes.length === 0 ? (
-          <p className="carregando">Nenhuma missão cadastrada ainda.</p>
+        {carregando ? (
+          <p className="carregando">Carregando mapa…</p>
         ) : (
-          <div className="grade-missoes">
-            {missoes.map(m => {
-              const s = statsPorMissao[m.id]
-              return (
-                <div key={m.id} className="card-missao">
-                  <div className="card-topo">
-                    <strong>{m.sigla}</strong>
-                    <span className="badge-status">{m.status}</span>
-                  </div>
-                  <span className="card-pais">🌍 {nomePais(m.pais)}</span>
-                  <p className="card-nome">{m.nome_completo}</p>
-                  <div className="card-numeros">
-                    <div><span>{s ? Number(s.efetivo_total) : 0}</span><small>Efetivo</small></div>
-                    <div><span>{s ? Number(s.efetivo_feminino) : 0}</span><small>Mulheres</small></div>
-                    <div><span>{s ? Number(s.efetivo_leaving) : 0}</span><small>Leaving</small></div>
-                  </div>
-                  <span className="card-qg">QG: {m.qg_missao}</span>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
+          <section className="linha-principal">
+            <MapaPublico
+              missoes={missoes}
+              statsPorMissao={statsPorMissao}
+              focoMissao={focoMissao}
+              aoFocarConcluido={() => setFocoMissao(null)}
+            />
 
-      <footer className="rodape">
-        CCOPAB / Centro Conjunto de Operações de Paz do Brasil • Sistema de Apoio à Decisão Operacional
-      </footer>
-    </div>
+            <aside className="painel-missoes">
+              <div className="painel-cabecalho">
+                <h2>Missões Desdobradas</h2>
+                <span className="badge">{missoes.length} Missões</span>
+              </div>
+              {missoes.length === 0 ? (
+                <p className="carregando">Nenhuma missão cadastrada ainda.</p>
+              ) : (
+                missoes.map(m => {
+                  const s = statsPorMissao[m.id]
+                  return (
+                    <div key={m.id} className="card-missao-lateral">
+                      <div className="cm-topo">
+                        <strong>{m.sigla}</strong>
+                        <span className="cm-efetivo">
+                          {s ? Number(s.efetivo_total) : 0} militares
+                        </span>
+                      </div>
+                      <span className="cm-local">📍 {m.qg_missao}, {nomePais(m.pais)}</span>
+                      <div className="cm-rodape">
+                        <span className="cm-mandato">
+                          {m.inicio_mandato ? `Mandato: ${m.inicio_mandato}` : ''}
+                        </span>
+                        <button className="cm-ver" onClick={() => setFocoMissao(m.id)}>
+                          Ver no mapa →
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </aside>
+          </section>
+        )}
+
+        <footer className="rodape">
+          CCOPAB / Centro Conjunto de Operações de Paz do Brasil • Sistema de Apoio à Decisão Operacional
+        </footer>
+      </div>
+    </>
   )
 }

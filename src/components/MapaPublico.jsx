@@ -1,4 +1,4 @@
-// Mapa mundi escuro: países com missão ativa coloridos + pin clicável com modal
+// Mapa mundi claro: países com missão coloridos + pin clicável + foco pelo painel lateral
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import { nomePais } from '../paises'
@@ -6,20 +6,19 @@ import { nomePais } from '../paises'
 const URL_GEOJSON_PAISES =
   'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
 
-export default function MapaPublico({ missoes, statsPorMissao }) {
+export default function MapaPublico({ missoes, statsPorMissao, focoMissao, aoFocarConcluido }) {
   const refDivMapa = useRef(null)
   const refMapa = useRef(null)
   const refCamadaPaises = useRef(null)
   const refCamadaPins = useRef(null)
   const [missaoSelecionada, setMissaoSelecionada] = useState(null)
 
-  // Cria o mapa uma única vez (tiles escuros da CARTO)
+  // Cria o mapa uma única vez (tiles claros do OpenStreetMap, sem filtro)
   useEffect(() => {
     if (refMapa.current) return
     const mapa = L.map(refDivMapa.current, { worldCopyJump: true }).setView([15, 10], 2)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      subdomains: 'abcd',
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
       maxZoom: 19
     }).addTo(mapa)
     refMapa.current = mapa
@@ -38,8 +37,8 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
         refCamadaPaises.current = L.geoJSON(geojson, {
           style: feature =>
             isoComMissao.has(feature.id)
-              ? { fillColor: '#3b82f6', fillOpacity: 0.4, color: '#60a5fa', weight: 1 }
-              : { fillColor: '#475569', fillOpacity: 0.12, color: '#334155', weight: 0.5 }
+              ? { fillColor: '#3b82f6', fillOpacity: 0.4, color: '#1e40af', weight: 1 }
+              : { fillColor: '#94a3b8', fillOpacity: 0.15, color: '#cbd5e1', weight: 0.5 }
         }).addTo(mapa)
       })
   }, [missoes])
@@ -54,14 +53,25 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
       missoes.map(m =>
         L.circleMarker([Number(m.latitude), Number(m.longitude)], {
           radius: 8,
-          color: '#0ea5e9',
-          fillColor: '#38bdf8',
+          color: '#1e3a8a',
+          fillColor: '#3b82f6',
           fillOpacity: 1,
           weight: 2
         }).on('click', () => setMissaoSelecionada(m))
       )
     ).addTo(mapa)
   }, [missoes])
+
+  // "Ver no mapa" do painel lateral: aproxima e abre o detalhe da missão
+  useEffect(() => {
+    if (!focoMissao) return
+    const m = missoes.find(x => x.id === focoMissao)
+    if (m && refMapa.current) {
+      refMapa.current.flyTo([Number(m.latitude), Number(m.longitude)], 5, { duration: 1.2 })
+      setMissaoSelecionada(m)
+    }
+    aoFocarConcluido()
+  }, [focoMissao, missoes, aoFocarConcluido])
 
   const s = missaoSelecionada ? statsPorMissao[missaoSelecionada.id] : null
 

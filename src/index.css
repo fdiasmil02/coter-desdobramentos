@@ -2,83 +2,151 @@
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0a1220;                 /* fundo azul-marinho profundo */
-  color: #e8edf6;                      /* texto claro */
+  background: #0b121a;
+  color: #e8edf6;
 }
 
-.app { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+.app { max-width: 1280px; margin: 0 auto; padding: 20px 16px 40px; }
 
-/* ---------- Cabeçalho com abas ---------- */
-.cabecalho { text-align: center; margin-bottom: 24px; }
-.emblema { font-size: 2.2rem; }
-.cabecalho h1 { font-size: 1.7rem; color: #f4f7fc; margin-top: 4px; }
-.subtitulo { color: #8fa1bb; margin-top: 4px; }
-.abas {
-  margin-top: 16px; display: inline-flex; gap: 6px;
-  background: #131c30; border: 1px solid #243350;
-  padding: 6px; border-radius: 999px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+/* ---------- BARRA SUPERIOR (marca à esquerda, abas à direita) ---------- */
+.barra-superior {
+  background: #101a29; border-bottom: 1px solid #243350;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  padding: 14px 28px;
+  position: sticky; top: 0; z-index: 500;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
-.aba { padding: 8px 18px; border-radius: 999px; font-size: 0.9rem; cursor: pointer; }
+.barra-marca { display: flex; align-items: center; gap: 12px; }
+.barra-marca .emblema { font-size: 1.8rem; }
+.barra-marca h1 { font-size: 1.15rem; color: #f4f7fc; }
+.barra-marca .subtitulo { font-size: 0.78rem; color: #8fa1bb; margin-top: 2px; }
+
+.abas { display: inline-flex; gap: 6px; align-items: center; }
+.aba { padding: 8px 16px; border-radius: 999px; font-size: 0.88rem; cursor: pointer; }
 .aba.ativa { background: #2f6fd8; color: #fff; font-weight: 600; }
 .aba.inativa { color: #8fa1bb; }
 .aba.inativa:hover { background: #1a2742; }
+.usuario-logado { background: rgba(34, 197, 94, 0.1); color: #4ade80; font-weight: 600; cursor: default; }
 
-/* ---------- Contadores (5 cartões) ---------- */
+/* ---------- CONTADORES (5 cartões com acentos coloridos) ---------- */
 .contadores {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px; margin-bottom: 24px;
+  gap: 14px; margin-bottom: 20px;
 }
 .contador {
-  background: #131c30; border: 1px solid #243350; border-radius: 12px;
-  padding: 16px 14px; text-align: center;
+  background: #131c30; border: 1px solid #243350; border-top: 3px solid #22d3ee;
+  border-radius: 12px; padding: 14px; text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
-.contador .rotulo { display: block; font-size: 0.82rem; color: #8fa1bb; }
-.contador .valor { display: block; font-size: 2.1rem; font-weight: 700; color: #5b9cf6; margin: 4px 0; }
-.contador .contexto { display: block; font-size: 0.78rem; color: #64748b; }
+.contador .rotulo {
+  display: block; font-size: 0.75rem; color: #8fa1bb;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.contador .valor { display: block; font-size: 2.1rem; font-weight: 700; color: #f4f7fc; margin: 4px 0; }
+.contador .contexto { display: block; font-size: 0.75rem; color: #64748b; }
+.contador.acc-ciano   { border-top-color: #22d3ee; }
+.contador.acc-azul    { border-top-color: #3b82f6; }
+.contador.acc-roxo    { border-top-color: #a855f7; }
+.contador.acc-rosa    { border-top-color: #ec4899; }
+.contador.acc-laranja { border-top-color: #f59e0b; }
+.contador.acc-ciano .valor   { color: #22d3ee; }
+.contador.acc-azul .valor    { color: #60a5fa; }
+.contador.acc-roxo .valor    { color: #c084fc; }
+.contador.acc-rosa .valor    { color: #f472b6; }
+.contador.acc-laranja .valor { color: #fbbf24; }
 
 .aviso-erro {
   background: #3b1420; color: #fca5a5; border: 1px solid #7f1d1d;
   border-radius: 8px; padding: 12px; margin-bottom: 16px;
 }
 
-/* ---------- Mapa ---------- */
+/* ---------- LINHA PRINCIPAL: mapa (esq.) + missões (dir.) ---------- */
+.linha-principal {
+  display: grid; grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px; align-items: start;
+}
+@media (max-width: 900px) {
+  .linha-principal { grid-template-columns: 1fr; }
+}
+
+/* ---------- Mapa (tiles CLAROS, sem filtro) ---------- */
 .mapa-bloco {
   background: #131c30; border: 1px solid #243350; border-radius: 12px;
   padding: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .mapa-cabecalho {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 4px 6px 10px; flex-wrap: wrap; gap: 6px;
+  padding: 2px 4px 10px; flex-wrap: wrap; gap: 6px;
 }
-.mapa-cabecalho h2 { font-size: 1.05rem; color: #f4f7fc; }
-.dica { font-size: 0.8rem; color: #8fa1bb; background: #1a2742; padding: 4px 12px; border-radius: 999px; }
+.mapa-cabecalho h2 { font-size: 1rem; color: #f4f7fc; }
+.dica { font-size: 0.78rem; color: #8fa1bb; background: #1a2742; padding: 4px 12px; border-radius: 999px; }
 .badge-tempo-real {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
   color: #4ade80; background: rgba(34, 197, 94, 0.12);
   border: 1px solid rgba(34, 197, 94, 0.4);
   padding: 3px 10px; border-radius: 999px;
 }
-.mapa { height: 480px; border-radius: 8px; z-index: 0; }
+.mapa { height: 520px; border-radius: 8px; z-index: 0; }
+.mapa .leaflet-control-attribution {
+  background: rgba(19, 28, 48, 0.8); color: #8fa1bb; font-size: 0.68rem;
+}
+.mapa .leaflet-control-attribution a { color: #5b9cf6; }
+.mapa .leaflet-control-zoom a {
+  background: #131c30 !important; color: #e8edf6 !important;
+  border: 1px solid #243350 !important;
+}
 
-.legenda { display: flex; gap: 20px; padding: 10px 6px 2px; font-size: 0.85rem; color: #b8c5d9; flex-wrap: wrap; }
+.legenda { display: flex; gap: 20px; padding: 10px 4px 2px; font-size: 0.82rem; color: #b8c5d9; flex-wrap: wrap; }
 .legenda-item { display: flex; align-items: center; gap: 6px; }
 .amostra { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
 .cor-pais-ativo { background: rgba(59, 130, 246, 0.4); border: 1px solid #60a5fa; }
 .cor-pin { background: #38bdf8; border-radius: 50%; border: 2px solid #0ea5e9; }
 
+/* ---------- PAINEL DE MISSÕES (coluna lateral) ---------- */
+.painel-missoes {
+  background: #131c30; border: 1px solid #243350; border-radius: 12px;
+  padding: 14px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.painel-cabecalho { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.painel-cabecalho h2 {
+  font-size: 0.85rem; color: #f4f7fc;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.badge {
+  padding: 3px 10px; background: rgba(59, 130, 246, 0.12); color: #93c5fd;
+  border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+}
+.card-missao-lateral {
+  background: #0d1526; border: 1px solid #243350; border-radius: 10px;
+  padding: 12px; margin-bottom: 10px;
+}
+.card-missao-lateral:last-child { margin-bottom: 0; }
+.cm-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.cm-topo strong { font-size: 1rem; color: #f4f7fc; }
+.cm-efetivo { font-size: 0.8rem; font-weight: 700; color: #22d3ee; white-space: nowrap; }
+.cm-local { display: block; font-size: 0.8rem; color: #8fa1bb; margin-top: 4px; }
+.cm-rodape {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px; padding-top: 8px; border-top: 1px solid #1a2742;
+}
+.cm-mandato { font-size: 0.75rem; color: #64748b; }
+.cm-ver {
+  background: none; border: none; color: #5b9cf6;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0;
+}
+.cm-ver:hover { color: #93c5fd; }
+
 /* ---------- Modal de detalhes do pin ---------- */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(4, 9, 20, 0.72);
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
 }
 .modal {
   background: #131c30; border: 1px solid #243350; border-radius: 14px;
-  width: 100%; max-width: 520px;
-  padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  width: 100%; max-width: 520px; padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 .modal-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; }
 .modal-sigla { font-size: 1.5rem; font-weight: 700; color: #f4f7fc; }
@@ -102,55 +170,17 @@ body {
 .modal-rotulo { display: block; font-size: 0.75rem; color: #8fa1bb; margin-top: 2px; }
 .modal-nota { font-size: 0.8rem; color: #64748b; text-align: center; }
 
-/* ---------- Cards de missões ---------- */
-.lista-missoes {
-  margin-top: 32px; background: #131c30; border: 1px solid #243350;
-  border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-}
-.lista-cabecalho { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.lista-cabecalho h2 { font-size: 1.1rem; color: #f4f7fc; }
-.badge {
-  padding: 3px 12px; background: rgba(59, 130, 246, 0.12); color: #93c5fd;
-  border-radius: 999px; font-size: 0.8rem; font-weight: 600;
-}
-.grade-missoes {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 14px;
-}
-.card-missao {
-  border: 1px solid #243350; border-radius: 10px; padding: 16px;
-  background: #0d1526;
-}
-.card-topo { display: flex; justify-content: space-between; align-items: center; }
-.card-topo strong { font-size: 1.1rem; color: #f4f7fc; }
-.badge-status {
-  font-size: 0.72rem; padding: 2px 10px; border-radius: 999px;
-  background: rgba(34, 197, 94, 0.12); color: #4ade80; font-weight: 600;
-}
-.card-pais { display: block; font-size: 0.85rem; color: #8fa1bb; margin-top: 4px; }
-.card-nome { font-size: 0.88rem; color: #b8c5d9; margin: 8px 0 12px; min-height: 2.4em; }
-.card-numeros { display: flex; gap: 8px; }
-.card-numeros div {
-  flex: 1; background: #131c30; border: 1px solid #243350; border-radius: 8px;
-  text-align: center; padding: 8px 4px;
-}
-.card-numeros span { display: block; font-weight: 700; color: #5b9cf6; }
-.card-numeros small { font-size: 0.7rem; color: #8fa1bb; }
-.card-qg { display: block; margin-top: 10px; font-size: 0.8rem; color: #64748b; }
-
-/* ---------- Rodapé ---------- */
+/* ---------- Rodapé / carregando ---------- */
 .rodape {
-  margin-top: 32px; text-align: center; font-size: 0.82rem;
+  margin-top: 28px; text-align: center; font-size: 0.8rem;
   color: #64748b; padding-top: 16px; border-top: 1px solid #1a2742;
 }
-
-/* ---------- Carregando ---------- */
 .carregando { text-align: center; color: #8fa1bb; padding: 40px 0; }
 
 /* ---------- Login ---------- */
 .tela-login {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: #0a1220; padding: 16px;
+  background: #0b121a; padding: 16px;
 }
 .cartao-login {
   background: #131c30; border: 1px solid #243350; border-radius: 14px;
@@ -181,3 +211,8 @@ body {
 }
 .botao-sair:hover { background: #4d1a2b; }
 
+/* ---------- Usuário logado no cabeçalho ---------- */
+.usuario-logado {
+  background: rgba(34, 197, 94, 0.1); color: #4ade80;
+  font-weight: 600; cursor: default;
+}
