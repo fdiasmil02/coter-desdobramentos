@@ -1,6 +1,7 @@
-// Página pública: contadores + mapa mundi + lista de missões ativas
+// Página pública: contadores + mapa mundi + cards de missões (estilo protótipo)
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import { nomePais } from './paises'
 import MapaPublico from './components/MapaPublico'
 import Contadores from './components/Contadores'
 
@@ -25,24 +26,28 @@ export default function App() {
     carregarDados()
   }, [])
 
-  // Indexa as estatísticas pelo id da missão (busca rápida no mapa)
   const statsPorMissao = Object.fromEntries(stats.map(s => [s.missao_id, s]))
-  const totalEfetivo = stats.reduce((soma, s) => soma + Number(s.efetivo_total), 0)
-  const totalMulheres = stats.reduce((soma, s) => soma + Number(s.efetivo_feminino), 0)
+  const soma = campo => stats.reduce((total, s) => total + Number(s[campo] ?? 0), 0)
 
   return (
     <div className="app">
       <header className="cabecalho">
-        <h1>Efetivos em Missões de Paz — ONU</h1>
-        <p className="subtitulo">
-          Militares do Exército Brasileiro e Policiais Militares desdobrados
-        </p>
+        <div className="emblema">🕊️</div>
+        <h1>Controle de Efetivos — Missões de Paz</h1>
+        <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
+        <nav className="abas">
+          <span className="aba ativa">🌐 Mapa Público</span>
+          <span className="aba desabilitada" title="Em construção">🔒 Painel Admin</span>
+        </nav>
       </header>
 
       <Contadores
-        totalEfetivo={totalEfetivo}
+        totalEfetivo={soma('efetivo_total')}
+        totalEb={soma('efetivo_eb')}
+        totalPm={soma('efetivo_pm')}
+        totalMulheres={soma('efetivo_feminino')}
+        totalLeaving={soma('efetivo_leaving')}
         totalMissoes={missoes.length}
-        totalMulheres={totalMulheres}
       />
 
       {erro && <div className="aviso-erro">Erro ao carregar dados: {erro}</div>}
@@ -54,25 +59,40 @@ export default function App() {
       )}
 
       <section className="lista-missoes">
-        <h2>Missões ativas</h2>
+        <div className="lista-cabecalho">
+          <h2>Missões Desdobradas</h2>
+          <span className="badge">{missoes.length} Missões</span>
+        </div>
         {missoes.length === 0 ? (
-          <p>Nenhuma missão cadastrada ainda.</p>
+          <p className="carregando">Nenhuma missão cadastrada ainda.</p>
         ) : (
-          <ul>
+          <div className="grade-missoes">
             {missoes.map(m => {
               const s = statsPorMissao[m.id]
               return (
-                <li key={m.id}>
-                  <strong>{m.sigla}</strong> — {m.nome_completo} (QG: {m.qg_missao})
-                  <span className="badge">
-                    {s ? `${s.efetivo_total} sob comando da ONU` : 'sem efetivo cadastrado'}
-                  </span>
-                </li>
+                <div key={m.id} className="card-missao">
+                  <div className="card-topo">
+                    <strong>{m.sigla}</strong>
+                    <span className="badge-status">{m.status}</span>
+                  </div>
+                  <span className="card-pais">🌍 {nomePais(m.pais)}</span>
+                  <p className="card-nome">{m.nome_completo}</p>
+                  <div className="card-numeros">
+                    <div><span>{s ? Number(s.efetivo_total) : 0}</span><small>Efetivo</small></div>
+                    <div><span>{s ? Number(s.efetivo_feminino) : 0}</span><small>Mulheres</small></div>
+                    <div><span>{s ? Number(s.efetivo_leaving) : 0}</span><small>Leaving</small></div>
+                  </div>
+                  <span className="card-qg">QG: {m.qg_missao}</span>
+                </div>
               )
             })}
-          </ul>
+          </div>
         )}
       </section>
+
+      <footer className="rodape">
+        Sistema de acompanhamento de efetivos brasileiros em missões de paz das Nações Unidas.
+      </footer>
     </div>
   )
 }

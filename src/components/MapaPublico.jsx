@@ -1,8 +1,8 @@
-// Mapa mundi: países com missão ativa coloridos + pin no QG de cada missão
-import { useEffect, useRef } from 'react'
+// Mapa mundi: países com missão ativa coloridos + pin clicável com modal de detalhes
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
+import { nomePais } from '../paises'
 
-// Contornos dos países (GeoJSON público, carregado uma vez)
 const URL_GEOJSON_PAISES =
   'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
 
@@ -11,8 +11,9 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
   const refMapa = useRef(null)
   const refCamadaPaises = useRef(null)
   const refCamadaPins = useRef(null)
+  const [missaoSelecionada, setMissaoSelecionada] = useState(null)
 
-  // Cria o mapa uma única vez
+  // Cria o mapa uma única vez (tiles claros, como no protótipo)
   useEffect(() => {
     if (refMapa.current) return
     const mapa = L.map(refDivMapa.current, { worldCopyJump: true }).setView([15, 10], 2)
@@ -36,40 +37,38 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
           style: feature =>
             isoComMissao.has(feature.id)
               ? { fillColor: '#2563eb', fillOpacity: 0.35, color: '#1e40af', weight: 1 }
-              : { fillColor: '#64748b', fillOpacity: 0.05, color: '#94a3b8', weight: 0.5 }
+              : { fillColor: '#64748b', fillOpacity: 0.08, color: '#94a3b8', weight: 0.5 }
         }).addTo(mapa)
       })
   }, [missoes])
 
-  // Pins nos QGs das missões, com resumo ao clicar
+  // Pins nos QGs — o clique abre o modal de detalhes
   useEffect(() => {
     const mapa = refMapa.current
     if (!mapa) return
     if (refCamadaPins.current) mapa.removeLayer(refCamadaPins.current)
 
     refCamadaPins.current = L.layerGroup(
-      missoes.map(m => {
-        const s = statsPorMissao[m.id]
-        const popup = `
-          <strong>${m.sigla}</strong><br/>
-          ${m.nome_completo}<br/>
-          QG: ${m.qg_missao}<br/>
-          Efetivo sob comando da ONU: <strong>${s ? Number(s.efetivo_total) : 0}</strong><br/>
-          Mulheres: <strong>${s ? Number(s.efetivo_feminino) : 0}</strong>
-        `
-        return L.circleMarker([Number(m.latitude), Number(m.longitude)], {
+      missoes.map(m =>
+        L.circleMarker([Number(m.latitude), Number(m.longitude)], {
           radius: 8,
           color: '#1e3a8a',
           fillColor: '#3b82f6',
           fillOpacity: 1,
           weight: 2
-        }).bindPopup(popup)
-      })
+        }).on('click', () => setMissaoSelecionada(m))
+      )
     ).addTo(mapa)
-  }, [missoes, statsPorMissao])
+  }, [missoes])
+
+  const s = missaoSelecionada ? statsPorMissao[missaoSelecionada.id] : null
 
   return (
     <div className="mapa-bloco">
+      <div className="mapa-cabecalho">
+        <h2>📍 Mapa Geográfico das Missões Ativas</h2>
+        <span className="dica">Clique no marcador para ver detalhes</span>
+      </div>
       <div ref={refDivMapa} className="mapa" />
       <div className="legenda">
         <span className="legenda-item">
@@ -79,6 +78,44 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
           <span className="amostra cor-pin" /> QG da missão
         </span>
       </div>
+
+      {missaoSelecionada && (
+        <div className="modal-overlay" onClick={() => setMissaoSelecionada(null)}>
+          <div className="modal" onClick={evento => evento.stopPropagation()}>
+            <div className="modal-cabecalho">
+              <div>
+                <div className="modal-sigla">{missaoSelecionada.sigla}</div>
+                <div className="modal-sub">
+                  {nomePais(missaoSelecionada.pais)} · {missaoSelecionada.status}
+                </div>
+              </div>
+              <button className="modal-fechar" onClick={() => setMissaoSelecionada(null)}>×</button>
+            </div>
+            <p className="modal-nome">{missaoSelecionada.nome_completo}</p>
+            <div className="modal-stats">
+              <div>
+                <span className="modal-valor">{s ? Number(s.efetivo_total) : 0}</span>
+                <span className="modal-rotulo">Efetivo Total</span>
+              </div>
+              <div>
+                <span className="modal-valor">{s ? Number(s.efetivo_feminino) : 0}</span>
+                <span className="modal-rotulo">Mulheres (♀)</span>
+              </div>
+              <div>
+                <span className="modal-valor">{s ? Number(s.efetivo_leaving) : 0}</span>
+                <span className="modal-rotulo">Em Leaving</span>
+              </div>
+              <div>
+                <span className="modal-valor">{missaoSelecionada.qg_missao}</span>
+                <span className="modal-rotulo">QG da Missão</span>
+              </div>
+            </div>
+            <p className="modal-nota">
+              Dados individuais dos efetivos são visíveis apenas para a equipe logada.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
