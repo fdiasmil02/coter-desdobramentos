@@ -1,4 +1,4 @@
-// Mapa mundi: países com missão ativa coloridos + pin clicável com modal de detalhes
+// Mapa mundi escuro: países com missão ativa coloridos + pin clicável com modal
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import { nomePais } from '../paises'
@@ -13,12 +13,14 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
   const refCamadaPins = useRef(null)
   const [missaoSelecionada, setMissaoSelecionada] = useState(null)
 
-  // Cria o mapa uma única vez (tiles claros, como no protótipo)
+  // Cria o mapa uma única vez (tiles escuros da CARTO)
   useEffect(() => {
     if (refMapa.current) return
     const mapa = L.map(refDivMapa.current, { worldCopyJump: true }).setView([15, 10], 2)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
     }).addTo(mapa)
     refMapa.current = mapa
   }, [])
@@ -36,8 +38,8 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
         refCamadaPaises.current = L.geoJSON(geojson, {
           style: feature =>
             isoComMissao.has(feature.id)
-              ? { fillColor: '#2563eb', fillOpacity: 0.35, color: '#1e40af', weight: 1 }
-              : { fillColor: '#64748b', fillOpacity: 0.08, color: '#94a3b8', weight: 0.5 }
+              ? { fillColor: '#3b82f6', fillOpacity: 0.4, color: '#60a5fa', weight: 1 }
+              : { fillColor: '#475569', fillOpacity: 0.12, color: '#334155', weight: 0.5 }
         }).addTo(mapa)
       })
   }, [missoes])
@@ -52,8 +54,8 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
       missoes.map(m =>
         L.circleMarker([Number(m.latitude), Number(m.longitude)], {
           radius: 8,
-          color: '#1e3a8a',
-          fillColor: '#3b82f6',
+          color: '#0ea5e9',
+          fillColor: '#38bdf8',
           fillOpacity: 1,
           weight: 2
         }).on('click', () => setMissaoSelecionada(m))
@@ -67,7 +69,10 @@ export default function MapaPublico({ missoes, statsPorMissao }) {
     <div className="mapa-bloco">
       <div className="mapa-cabecalho">
         <h2>📍 Mapa Geográfico das Missões Ativas</h2>
-        <span className="dica">Clique no marcador para ver detalhes</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span className="badge-tempo-real">● TEMPO REAL</span>
+          <span className="dica">Clique no marcador para ver detalhes</span>
+        </div>
       </div>
       <div ref={refDivMapa} className="mapa" />
       <div className="legenda">

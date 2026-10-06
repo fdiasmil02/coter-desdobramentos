@@ -2,8 +2,8 @@
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #f0f2f5;
-  color: #1e293b;
+  background: #0a1220;                 /* fundo azul-marinho profundo */
+  color: #e8edf6;                      /* texto claro */
 }
 
 .app { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
@@ -11,17 +11,18 @@ body {
 /* ---------- Cabeçalho com abas ---------- */
 .cabecalho { text-align: center; margin-bottom: 24px; }
 .emblema { font-size: 2.2rem; }
-.cabecalho h1 { font-size: 1.7rem; color: #0f172a; margin-top: 4px; }
-.subtitulo { color: #64748b; margin-top: 4px; }
+.cabecalho h1 { font-size: 1.7rem; color: #f4f7fc; margin-top: 4px; }
+.subtitulo { color: #8fa1bb; margin-top: 4px; }
 .abas {
   margin-top: 16px; display: inline-flex; gap: 6px;
-  background: #fff; border: 1px solid #e2e8f0;
+  background: #131c30; border: 1px solid #243350;
   padding: 6px; border-radius: 999px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
-.aba { padding: 8px 18px; border-radius: 999px; font-size: 0.9rem; }
-.aba.ativa { background: #2563eb; color: #fff; font-weight: 600; }
-.aba.desabilitada { color: #94a3b8; cursor: not-allowed; }
+.aba { padding: 8px 18px; border-radius: 999px; font-size: 0.9rem; cursor: pointer; }
+.aba.ativa { background: #2f6fd8; color: #fff; font-weight: 600; }
+.aba.inativa { color: #8fa1bb; }
+.aba.inativa:hover { background: #1a2742; }
 
 /* ---------- Contadores (5 cartões) ---------- */
 .contadores {
@@ -29,80 +30,87 @@ body {
   gap: 16px; margin-bottom: 24px;
 }
 .contador {
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  background: #131c30; border: 1px solid #243350; border-radius: 12px;
   padding: 16px 14px; text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
-.contador .rotulo { display: block; font-size: 0.82rem; color: #64748b; }
-.contador .valor { display: block; font-size: 2rem; font-weight: 700; color: #2563eb; margin: 4px 0; }
-.contador .contexto { display: block; font-size: 0.78rem; color: #94a3b8; }
+.contador .rotulo { display: block; font-size: 0.82rem; color: #8fa1bb; }
+.contador .valor { display: block; font-size: 2.1rem; font-weight: 700; color: #5b9cf6; margin: 4px 0; }
+.contador .contexto { display: block; font-size: 0.78rem; color: #64748b; }
 
 .aviso-erro {
-  background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;
+  background: #3b1420; color: #fca5a5; border: 1px solid #7f1d1d;
   border-radius: 8px; padding: 12px; margin-bottom: 16px;
 }
 
 /* ---------- Mapa ---------- */
 .mapa-bloco {
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
-  padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #131c30; border: 1px solid #243350; border-radius: 12px;
+  padding: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .mapa-cabecalho {
   display: flex; justify-content: space-between; align-items: center;
   padding: 4px 6px 10px; flex-wrap: wrap; gap: 6px;
 }
-.mapa-cabecalho h2 { font-size: 1.05rem; color: #0f172a; }
-.dica { font-size: 0.8rem; color: #64748b; background: #eff6ff; padding: 4px 12px; border-radius: 999px; }
+.mapa-cabecalho h2 { font-size: 1.05rem; color: #f4f7fc; }
+.dica { font-size: 0.8rem; color: #8fa1bb; background: #1a2742; padding: 4px 12px; border-radius: 999px; }
+.badge-tempo-real {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+  color: #4ade80; background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  padding: 3px 10px; border-radius: 999px;
+}
 .mapa { height: 480px; border-radius: 8px; z-index: 0; }
 
-.legenda { display: flex; gap: 20px; padding: 10px 6px 2px; font-size: 0.85rem; color: #475569; flex-wrap: wrap; }
+.legenda { display: flex; gap: 20px; padding: 10px 6px 2px; font-size: 0.85rem; color: #b8c5d9; flex-wrap: wrap; }
 .legenda-item { display: flex; align-items: center; gap: 6px; }
 .amostra { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
-.cor-pais-ativo { background: rgba(37, 99, 235, 0.35); border: 1px solid #1e40af; }
-.cor-pin { background: #3b82f6; border-radius: 50%; border: 2px solid #1e3a8a; }
+.cor-pais-ativo { background: rgba(59, 130, 246, 0.4); border: 1px solid #60a5fa; }
+.cor-pin { background: #38bdf8; border-radius: 50%; border: 2px solid #0ea5e9; }
 
 /* ---------- Modal de detalhes do pin ---------- */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(4, 9, 20, 0.72);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
 }
 .modal {
-  background: #fff; border-radius: 14px; width: 100%; max-width: 520px;
-  padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  background: #131c30; border: 1px solid #243350; border-radius: 14px;
+  width: 100%; max-width: 520px;
+  padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 .modal-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; }
-.modal-sigla { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
-.modal-sub { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+.modal-sigla { font-size: 1.5rem; font-weight: 700; color: #f4f7fc; }
+.modal-sub { font-size: 0.85rem; color: #8fa1bb; margin-top: 2px; }
 .modal-fechar {
-  border: none; background: #f1f5f9; color: #475569;
+  border: none; background: #1a2742; color: #b8c5d9;
   width: 32px; height: 32px; border-radius: 8px;
   font-size: 1.2rem; cursor: pointer; line-height: 1;
 }
-.modal-fechar:hover { background: #e2e8f0; }
-.modal-nome { color: #334155; margin: 10px 0 16px; }
+.modal-fechar:hover { background: #243350; }
+.modal-nome { color: #b8c5d9; margin: 10px 0 16px; }
 .modal-stats {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 10px; margin-bottom: 16px;
 }
 .modal-stats div {
-  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  background: #0d1526; border: 1px solid #243350; border-radius: 10px;
   padding: 12px 8px; text-align: center;
 }
-.modal-valor { display: block; font-size: 1.3rem; font-weight: 700; color: #2563eb; }
-.modal-rotulo { display: block; font-size: 0.75rem; color: #64748b; margin-top: 2px; }
-.modal-nota { font-size: 0.8rem; color: #94a3b8; text-align: center; }
+.modal-valor { display: block; font-size: 1.3rem; font-weight: 700; color: #5b9cf6; }
+.modal-rotulo { display: block; font-size: 0.75rem; color: #8fa1bb; margin-top: 2px; }
+.modal-nota { font-size: 0.8rem; color: #64748b; text-align: center; }
 
 /* ---------- Cards de missões ---------- */
 .lista-missoes {
-  margin-top: 32px; background: #fff; border: 1px solid #e2e8f0;
-  border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-top: 32px; background: #131c30; border: 1px solid #243350;
+  border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .lista-cabecalho { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.lista-cabecalho h2 { font-size: 1.1rem; color: #0f172a; }
+.lista-cabecalho h2 { font-size: 1.1rem; color: #f4f7fc; }
 .badge {
-  padding: 3px 12px; background: #eff6ff; color: #1d4ed8;
+  padding: 3px 12px; background: rgba(59, 130, 246, 0.12); color: #93c5fd;
   border-radius: 999px; font-size: 0.8rem; font-weight: 600;
 }
 .grade-missoes {
@@ -110,21 +118,65 @@ body {
   gap: 14px;
 }
 .card-missao {
-  border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;
-  background: #f8fafc;
+  border: 1px solid #243350; border-radius: 10px; padding: 16px;
+  background: #0d1526;
 }
 .card-topo { display: flex; justify-content: space-between; align-items: center; }
-.card-topo strong { font-size: 1.1rem; color: #0f172a; }
+.card-topo strong { font-size: 1.1rem; color: #f4f7fc; }
 .badge-status {
   font-size: 0.72rem; padding: 2px 10px; border-radius: 999px;
-  background: #dcfce7; color: #15803d; font-weight: 600;
+  background: rgba(34, 197, 94, 0.12); color: #4ade80; font-weight: 600;
 }
-.card-pais { display: block; font-size: 0.85rem; color: #64748b; margin-top: 4px; }
-.card-nome { font-size: 0.88rem; color: #334155; margin: 8px 0 12px; min-height: 2.4em; }
+.card-pais { display: block; font-size: 0.85rem; color: #8fa1bb; margin-top: 4px; }
+.card-nome { font-size: 0.88rem; color: #b8c5d9; margin: 8px 0 12px; min-height: 2.4em; }
 .card-numeros { display: flex; gap: 8px; }
 .card-numeros div {
-  flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+  flex: 1; background: #131c30; border: 1px solid #243350; border-radius: 8px;
   text-align: center; padding: 8px 4px;
 }
-.card-numeros span { display: block; font-weight: 700; color: #2563eb; }
-.card-numeros small { font-size: 0.7rem; 
+.card-numeros span { display: block; font-weight: 700; color: #5b9cf6; }
+.card-numeros small { font-size: 0.7rem; color: #8fa1bb; }
+.card-qg { display: block; margin-top: 10px; font-size: 0.8rem; color: #64748b; }
+
+/* ---------- Rodapé ---------- */
+.rodape {
+  margin-top: 32px; text-align: center; font-size: 0.82rem;
+  color: #64748b; padding-top: 16px; border-top: 1px solid #1a2742;
+}
+
+/* ---------- Carregando ---------- */
+.carregando { text-align: center; color: #8fa1bb; padding: 40px 0; }
+
+/* ---------- Login ---------- */
+.tela-login {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: #0a1220; padding: 16px;
+}
+.cartao-login {
+  background: #131c30; border: 1px solid #243350; border-radius: 14px;
+  padding: 32px; width: 100%; max-width: 380px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.cartao-login h1 { font-size: 1.3rem; color: #f4f7fc; }
+.cartao-login .subtitulo { color: #8fa1bb; font-size: 0.85rem; margin-bottom: 12px; }
+.cartao-login label { font-size: 0.85rem; font-weight: 600; color: #b8c5d9; }
+.cartao-login input {
+  background: #0d1526; border: 1px solid #243350; border-radius: 8px;
+  padding: 10px 12px; font-size: 0.95rem; color: #e8edf6; outline: none;
+}
+.cartao-login input:focus { border-color: #2f6fd8; }
+.cartao-login button {
+  background: #2f6fd8; color: #fff; border: none; border-radius: 8px;
+  padding: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.cartao-login button:disabled { opacity: 0.6; cursor: wait; }
+.botao-secundario { background: #1a2742 !important; color: #b8c5d9 !important; }
+
+/* ---------- Botão sair ---------- */
+.botao-sair {
+  margin-top: 24px; background: #3b1420; color: #fca5a5;
+  border: 1px solid #7f1d1d; border-radius: 8px; padding: 10px 20px;
+  font-size: 0.9rem; cursor: pointer;
+}
+.botao-sair:hover { background: #4d1a2b; }

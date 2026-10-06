@@ -1,11 +1,13 @@
 // Página pública: contadores + mapa mundi + cards de missões (estilo protótipo)
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { nomePais } from './paises'
 import MapaPublico from './components/MapaPublico'
 import Contadores from './components/Contadores'
 
 export default function App() {
+  const navegar = useNavigate()
   const [missoes, setMissoes] = useState([])
   const [stats, setStats] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -37,7 +39,7 @@ export default function App() {
         <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
         <nav className="abas">
           <span className="aba ativa">🌐 Mapa Público</span>
-          <span className="aba desabilitada" title="Em construção">🔒 Painel Admin</span>
+          <span className="aba inativa" onClick={() => navegar('/login')}>🔒 Painel Admin</span>
         </nav>
       </header>
 
@@ -91,7 +93,7 @@ export default function App() {
       </section>
 
       <footer className="rodape">
-        Sistema de acompanhamento de efetivos brasileiros em missões de paz das Nações Unidas.
+        CCOPAB / Centro Conjunto de Operações de Paz do Brasil • Sistema de Apoio à Decisão Operacional
       </footer>
     </div>
   )
