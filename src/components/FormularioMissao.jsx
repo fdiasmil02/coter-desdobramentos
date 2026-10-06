@@ -4,6 +4,29 @@ import L from 'leaflet'
 import { supabase } from '../supabaseClient'
 import { LISTA_PAISES } from '../paises'
 
+// Aceita "2027-10", "10/2027", "10-2027" ou "2027-10-01" e devolve "2027-10"
+function normalizarMesAno(valor) {
+  if (!valor) return ''
+  const v = String(valor).trim()
+  if (/^\d{4}-\d{2}$/.test(v)) return v                                  // AAAA-MM (nativo do navegador)
+  const m = v.match(/^(\d{1,2})[\/\-](\d{4})$/)                          // MM/AAAA ou MM-AAAA (digitação manual)
+  if (m) return `${m[2]}-${String(Number(m[1])).padStart(2, '0')}`
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v.slice(0, 7)                // data completa vinda do banco
+  return ''
+}
+
+// "2027-10" → "2027-10-01" (a coluna date exige dia completo)
+function mesAnoParaData(valor) {
+  const normalizado = normalizarMesAno(valor)
+  return normalizado ? `${normalizado}-01` : null
+}
+
+// "2027-10-01" (banco) → "2027-10" (para preencher o campo na edição)
+function dataParaMesAno(valor) {
+  if (!valor) return ''
+  return normalizarMesAno(valor)
+}
+
 // Mini mapa interativo: clique define o ponto do QG
 function MiniMapa({ lat, lng, aoSelecionar }) {
   const refDiv = useRef(null)
@@ -43,9 +66,8 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
   const [nomeCompleto, setNomeCompleto] = useState(missao?.nome_completo ?? '')
   const [qg, setQg] = useState(missao?.qg_missao ?? '')
   const [status, setStatus] = useState(missao?.status ?? 'Ativa')
-  // Campos de mês/ano recebem "AAAA-MM" (corta o dia do valor salvo)
-  const [inicioMandato, setInicioMandato] = useState(missao?.data_inicio_mandato?.slice(0, 7) ?? '')
-  const [fimMandato, setFimMandato] = useState(missao?.data_fim_mandato?.slice(0, 7) ?? '')
+  const [inicioMandato, setInicioMandato] = useState(dataParaMesAno(missao?.data_inicio_mandato))
+  const [fimMandato, setFimMandato] = useState(dataParaMesAno(missao?.data_fim_mandato))
   const [latitude, setLatitude] = useState(missao?.latitude ?? '')
   const [longitude, setLongitude] = useState(missao?.longitude ?? '')
   const [descricao, setDescricao] = useState(missao?.descricao ?? '')
@@ -55,6 +77,17 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
   async function salvar(evento) {
     evento.preventDefault()
     setErro(null)
+
+    // Valida o formato dos meses/anos antes de tocar no banco
+    if (inicioMandato.trim() !== '' && normalizarMesAno(inicioMandato) === '') {
+      setErro('Início do mandato inválido — informe mês e ano, como 10/2027.')
+      return
+    }
+    if (fimMandato.trim() !== '' && normalizarMesAno(fimMandato) === '') {
+      setErro('Fim do mandato inválido — informe mês e ano, como 10/2027.')
+      return
+    }
+
     setAguardando(true)
 
     const registro = {
@@ -63,9 +96,9 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
       nome_completo: nomeCompleto.trim(),
       qg_missao: qg.trim(),
       status,
-      // Guarda o dia 1º do mês escolhido (coluna date exige data completa)
-      data_inicio_mandato: inicioMandato ? `${inicioMandato}-01` : null,
-      data_fim_mandato: fimMandato ? `${fimMandato}-01` : null,
+      // Guarda sempre o dia 1º do mês escolhido
+      data_inicio_mandato: mesAnoParaData(inicioMandato),
+      data_fim_mandato: mesAnoParaData(fimMandato),
       latitude,
       longitude,
       descricao: descricao.trim() || null
@@ -128,15 +161,15 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
           </div>
           <div>
             <label>Início do Mandato (mês/ano)</label>
-            <input type="month" value={inicioMandato}
+            <input value={inicioMandato}
               onChange={e => setInicioMandato(e.target.value)}
-              placeholder="Mês e ano do início do mandato" />
+              placeholder="MM/AAAA — ex.: 10/2015" />
           </div>
           <div>
             <label>Fim do Mandato / Renovação (mês/ano)</label>
-            <input type="month" value={fimMandato}
+            <input value={fimMandato}
               onChange={e => setFimMandato(e.target.value)}
-              placeholder="Deixe vazio se o mandato estiver em curso" />
+              placeholder="MM/AAAA — vazio se o mandato estiver em curso" />
           </div>
           <div>
             <label>Latitude *</label>
