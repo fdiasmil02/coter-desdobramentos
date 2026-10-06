@@ -85,6 +85,7 @@ export default function App() {
             <MapaPublico
               missoes={missoes}
               statsPorMissao={statsPorMissao}
+              logado={logado}
               focoMissao={focoMissao}
               aoFocarConcluido={() => setFocoMissao(null)}
             />

@@ -1,0 +1,154 @@
+// Modal completo de efetivos de uma missão — visível apenas para usuários logados
+import { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
+import { nomePais } from '../paises'
+
+const CLASSE_SITUACAO = {
+  'Na Missão': 'verde',
+  'Leaving': 'laranja',
+  'Previsto': 'azul',
+  'Estendido': 'roxo',
+  'Retornou': 'cinza'
+}
+
+function formatarData(valor) {
+  if (!valor) return '—'
+  if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    const [ano, mes, dia] = valor.split('-')
+    return `${dia}/${mes}/${ano}`
+  }
+  return valor
+}
+
+export default function ModalEfetivos({ missao, stats, aoFechar }) {
+  const [efetivos, setEfetivos] = useState([])
+  const [busca, setBusca] = useState('')
+  const [filtroSituacao, setFiltroSituacao] = useState('Todas')
+  const [filtroTipo, setFiltroTipo] = useState('Todos')
+  const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState(null)
+
+  useEffect(() => {
+    async function carregar() {
+      setCarregando(true)
+      setErro(null)
+      const { data, error } = await supabase
+        .from('desdobrados')
+        .select('tipo, posto_graduacao, nome_guerra, data_chegada, data_previsao_retorno, situacao')
+        .eq('missao_id', missao.id)
+        .order('data_chegada')
+      if (error) setErro(error.message)
+      setEfetivos(data ?? [])
+      setCarregando(false)
+    }
+    carregar()
+  }, [missao.id])
+
+  const listaFiltrada = efetivos.filter(e =>
+    (busca === '' || (e.nome_guerra ?? '').toLowerCase().includes(busca.toLowerCase())) &&
+    (filtroSituacao === 'Todas' || e.situacao === filtroSituacao) &&
+    (filtroTipo === 'Todos' || e.tipo === filtroTipo)
+  )
+
+  const mandato = missao.inicio_mandato
+    ? `${formatarData(missao.inicio_mandato)} a ${missao.fim_mandato ? formatarData(missao.fim_mandato) : 'Atual'}`
+    : '—'
+
+  return (
+    <div className="modal-efetivos" onClick={aoFechar}>
+      <div className="modal-efetivos-caixa" onClick={evento => evento.stopPropagation()}>
+        <div className="modal-cabecalho">
+          <div>
+            <div className="modal-sigla">{missao.sigla}</div>
+            <div className="me-badges">
+              <span className="me-badge">📍 {missao.qg_missao}, {nomePais(missao.pais)}</span>
+              <span className={`me-badge ${missao.status === 'Ativa' ? 'ativa' : ''}`}>{missao.status}</span>
+            </div>
+            <p className="modal-nome">{missao.nome_completo}</p>
+          </div>
+          <button className="modal-fechar" onClick={aoFechar}>×</button>
+        </div>
+
+        <div className="modal-stats">
+          <div>
+            <span className="modal-valor modal-valor-branco">{stats ? Number(stats.efetivo_total) : 0}</span>
+            <span className="modal-rotulo">Efetivo Total</span>
+          </div>
+          <div>
+            <span className="modal-valor modal-valor-rosa">{stats ? Number(stats.efetivo_feminino) : 0}</span>
+            <span className="modal-rotulo">Mulheres (♀)</span>
+          </div>
+          <div>
+            <span className="modal-valor modal-valor-laranja">{stats ? Number(stats.efetivo_leaving) : 0}</span>
+            <span className="modal-rotulo">Em Leaving</span>
+          </div>
+          <div>
+            <span className="modal-valor modal-valor-branco">{mandato}</span>
+            <span className="modal-rotulo">Mandato ONU</span>
+          </div>
+        </div>
+
+        <div className="efetivos-filtros">
+          <input
+            className="efetivos-busca"
+            placeholder="Buscar por Nome de Guerra…"
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+          />
+          <select className="efetivos-select" value={filtroSituacao} onChange={e => setFiltroSituacao(e.target.value)}>
+            <option value="Todas">Todas Situações</option>
+            <option value="Na Missão">Na Missão</option>
+            <option value="Leaving">Leaving</option>
+            <option value="Previsto">Previsto</option>
+            <option value="Estendido">Estendido</option>
+            <option value="Retornou">Retornou</option>
+          </select>
+          <select className="efetivos-select" value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
+            <option value="Todos">Todos Tipos</option>
+            <option value="Militar do EB">Militar</option>
+            <option value="Policial Militar">Policial Militar</option>
+          </select>
+        </div>
+
+        {erro && <div className="aviso-erro">Erro ao carregar efetivos: {erro}</div>}
+
+        {carregando ? (
+          <p className="carregando">Carregando efetivos…</p>
+        ) : listaFiltrada.length === 0 ? (
+          <p className="carregando">Nenhum efetivo encontrado com os filtros atuais.</p>
+        ) : (
+          <div className="tabela-wrap">
+            <table className="tabela-efetivos">
+              <thead>
+                <tr>
+                  <th>Posto / Graduação</th>
+                  <th>Nome de Guerra</th>
+                  <th>Chegada</th>
+                  <th>Previsão de Retorno</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listaFiltrada.map((e, i) => (
+                  <tr key={i}>
+                    <td>{e.posto_graduacao}</td>
+                    <td>{e.nome_guerra}</td>
+                    <td>{formatarData(e.data_chegada)}</td>
+                    <td>{formatarData(e.data_previsao_retorno)}</td>
+                    <td>
+                      <span className={`badge-sit ${CLASSE_SITUACAO[e.situacao] ?? 'cinza'}`}>{e.situacao}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="me-rodape">
+          <button className="botao-fechar-modal" onClick={aoFechar}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
