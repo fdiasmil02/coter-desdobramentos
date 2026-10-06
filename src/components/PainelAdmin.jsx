@@ -1,4 +1,4 @@
-// Painel admin: navegação por abas + gerenciamento de missões (Etapa 1)
+// Painel admin (layout Skip): abas com sublinhado + grade de missões com estatísticas
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
@@ -9,8 +9,8 @@ export default function PainelAdmin() {
   const navegar = useNavigate()
   const [perfil, setPerfil] = useState(null)
   const [verificando, setVerificando] = useState(true)
-  const [aba, setAba] = useState('missoes')
   const [missoes, setMissoes] = useState([])
+  const [stats, setStats] = useState([])
   const [modalMissao, setModalMissao] = useState(null) // null | 'nova' | objeto da missão
 
   useEffect(() => {
@@ -31,12 +31,18 @@ export default function PainelAdmin() {
     verificar()
   }, [navegar])
 
-  async function carregarMissoes() {
-    const { data } = await supabase.from('missoes').select('*').order('sigla')
-    setMissoes(data ?? [])
+  async function carregarDados() {
+    const [resMissoes, resStats] = await Promise.all([
+      supabase.from('missoes').select('*').order('sigla'),
+      supabase.from('vw_stats_publico').select('*')
+    ])
+    setMissoes(resMissoes.data ?? [])
+    setStats(resStats.data ?? [])
   }
 
-  useEffect(() => { carregarMissoes() }, [])
+  useEffect(() => { carregarDados() }, [])
+
+  const statsPorMissao = Object.fromEntries(stats.map(s => [s.missao_id, s]))
 
   async function sair() {
     await supabase.auth.signOut()
@@ -51,66 +57,76 @@ export default function PainelAdmin() {
         <div className="barra-marca">
           <span className="emblema">🔒</span>
           <div>
-            <h1>Painel Admin</h1>
+            <h1>Módulo Administrativo • Gestão de Efetivo</h1>
             <p className="subtitulo">
-              Bem-vindo, {perfil?.nome ?? 'usuário'} — nível: {perfil?.nivel ?? '—'}
+              Sessão autenticada • {perfil?.nome ?? 'usuário'} • Nível de Acesso: {perfil?.nivel ?? '—'}
             </p>
           </div>
         </div>
         <nav className="abas">
           <span className="aba inativa" onClick={() => navegar('/')}>🌐 Mapa Público</span>
-          <span className="aba ativa">🔒 Painel Admin</span>
+          <button className="botao-sair-barra" onClick={sair}>Sair</button>
         </nav>
       </header>
 
       <nav className="admin-nav">
-        <button className={`admin-nav-botao ${aba === 'missoes' ? 'ativo' : ''}`} onClick={() => setAba('missoes')}>
-          🗺️ Missões
-        </button>
-        <button className="admin-nav-botao" disabled title="Etapa 2">👥 Efetivos</button>
-        <button className="admin-nav-botao" disabled title="Etapa 4">📊 Relatórios</button>
+        <button className="admin-nav-botao ativo">🗺️ Missões de Paz</button>
+        <button className="admin-nav-botao" disabled title="Etapa 2">👥 Efetivo Completo (com restritos)</button>
+        <button className="admin-nav-botao" disabled title="Etapa 3">📋 Cadastrar Desdobrado</button>
+        <button className="admin-nav-botao" disabled title="Etapa 4">📊 Relatórios de Rotação</button>
       </nav>
 
-      {aba === 'missoes' && (
-        <section className="lista-missoes">
-          <div className="admin-topo">
-            <h2>Missões Cadastradas</h2>
-            <button className="botao-primario" onClick={() => setModalMissao('nova')}>
-              ➕ Nova Missão
-            </button>
-          </div>
+      <section className="admin-secao">
+        <div className="admin-topo">
+          <h2>Missões de Paz</h2>
+          <button className="botao-nova-missao" onClick={() => setModalMissao('nova')}>
+            ➕ Nova Missão
+          </button>
+        </div>
 
-          {missoes.length === 0 ? (
-            <p className="carregando">Nenhuma missão cadastrada — clique em "Nova Missão" para começar.</p>
-          ) : (
-            <div className="grade-admin-missoes">
-              {missoes.map(m => (
+        {missoes.length === 0 ? (
+          <p className="carregando">Nenhuma missão cadastrada — clique em "Nova Missão" para começar.</p>
+        ) : (
+          <div className="grade-admin-missoes">
+            {missoes.map(m => {
+              const s = statsPorMissao[m.id]
+              return (
                 <div key={m.id} className="card-admin-missao">
-                  <div className="card-topo">
+                  <div className="ca-topo">
                     <strong>{m.sigla}</strong>
-                    <span className={`badge-status ${m.status === 'Ativa' ? '' : 'encerrada'}`}>{m.status}</span>
+                    <span className={`badge-status ${m.status === 'Ativa' ? '' : 'encerrada'}`}>
+                      {m.status}
+                    </span>
                   </div>
-                  <span className="cam-missao">🌍 {nomePais(m.pais)}</span>
-                  <span className="cam-missao">📍 QG: {m.qg_missao}</span>
-                  <button className="botao-editar" onClick={() => setModalMissao(m)}>
-                    ✏️ Gerenciar
-                  </button>
+                  <span className="ca-pais">🌍 {nomePais(m.pais)}</span>
+                  <span className="ca-nome">{m.nome_completo}</span>
+                  <span className="ca-local">📍 {m.qg_missao}</span>
+                  <span className="ca-coords">
+                    {m.latitude && m.longitude
+                      ? `${Number(m.latitude).toFixed(2)}, ${Number(m.longitude).toFixed(2)}`
+                      : 'Coordenadas não definidas'}
+                  </span>
+                  {m.descricao && <p className="ca-descricao">{m.descricao}</p>}
+                  <div className="ca-rodape">
+                    <span className="ca-efetivo">{s ? Number(s.efetivo_total) : 0} integrantes</span>
+                    <button className="botao-editar-card" onClick={() => setModalMissao(m)}>
+                      <span>✏️</span> Editar
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
+              )
+            })}
+          </div>
+        )}
+      </section>
 
       {modalMissao && (
         <FormularioMissao
           missao={modalMissao === 'nova' ? null : modalMissao}
-          aoSalvar={() => { setModalMissao(null); carregarMissoes() }}
+          aoSalvar={() => { setModalMissao(null); carregarDados() }}
           aoCancelar={() => setModalMissao(null)}
         />
       )}
-
-      <button className="botao-sair" onClick={sair}>Sair da conta</button>
     </div>
   )
 }

@@ -143,7 +143,7 @@ export default function FormularioMissao({ missao, aoSalvar, aoCancelar }) {
           </div>
           <div className="campo-inteiro">
             <label>📍 Selecionar no mapa interativo (clique para marcar o QG)</label>
-            <MiniMapa lat={latitude} lng={longitude} aoSelecionar={definirCoordenadas} />
+            <MiniMapa lat={latitude} lng={longitude} aoSelecionar={(lat, lng) => { setLatitude(lat); setLongitude(lng) }} />
             <span className="dica-mapa">O clique preenche automaticamente latitude e longitude.</span>
           </div>
           <div className="campo-inteiro">
