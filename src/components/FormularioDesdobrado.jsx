@@ -1,6 +1,7 @@
 // Formulário de cadastro/edição de desdobrado — campos espelham a tabela desdobrados
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import RecorteFoto from './RecorteFoto'
 
 // Lista validada de posto/graduação — EB: Gen Ex a Sd; PM: Cel a Sd
 const POSTOS_EB = [
@@ -39,6 +40,8 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
   const [situacao, setSituacao] = useState(desdobrado?.situacao ?? 'Na Missão')
   const [observacoes, setObservacoes] = useState(desdobrado?.observacoes ?? '')
   const [erro, setErro] = useState(null)
+  const [modalFotoAberto, setModalFotoAberto] = useState(false)
+  const [fotoSubindo, setFotoSubindo] = useState(false)
   const [aguardando, setAguardando] = useState(false)
 
   function limpar() {
@@ -48,6 +51,25 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
     setDataRetorno(''); setDataRetornoReal(''); setSituacao('Na Missão'); setObservacoes('')
     setErro(null)
   }
+
+  // Recebe o recorte do modal, envia ao bucket "fotos" e guarda a URL pública
+  async function receberFotoRecortada(blob) {
+    setModalFotoAberto(false)
+    setErro(null)
+    setFotoSubindo(true)
+    const caminho = `desdobrados/${Date.now()}.jpg`
+    const { error: erroUpload } = await supabase.storage
+        .from('fotos')
+        .upload(caminho, blob, { contentType: 'image/jpeg', upsert: true })
+    if (erroUpload) {
+        setErro('Falha no upload da foto: ' + erroUpload.message)
+        setFotoSubindo(false)
+        return
+    }
+    const { data } = supabase.storage.from('fotos').getPublicUrl(caminho)
+    setFotoUrl(data.publicUrl)
+    setFotoSubindo(false)
+   }
 
   async function salvar(evento) {
     evento.preventDefault()
@@ -184,9 +206,21 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
             placeholder="Documento de referência (opcional)" />
         </div>
         <div>
-          <label>Foto (URL)</label>
-          <input value={fotoUrl} onChange={e => setFotoUrl(e.target.value)}
-            placeholder="Endereço da foto (opcional — sem foto, exibe avatar)" />
+            <label>Foto do Integrante</label>
+            <div className="foto-upload-linha">
+                {fotoUrl
+                ? <img src={fotoUrl} alt="Prévia da foto" className="foto-previa" />
+                : <div className="foto-previa foto-vazia">👤</div>}
+                <button type="button" className="botao-secundario-form"
+                onClick={() => setModalFotoAberto(true)} disabled={fotoSubindo}>
+                {fotoSubindo ? 'Enviando…' : fotoUrl ? 'Trocar foto' : 'Selecionar foto'}
+                </button>
+                {fotoUrl && (
+                <button type="button" className="botao-secundario-form" onClick={() => setFotoUrl('')}>
+                    Remover
+                </button>
+                )}
+            </div>
         </div>
 
         {/* Seção 3 — Período de Desdobramento */}
@@ -217,6 +251,10 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
           <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)}
             placeholder="Anotações internas (opcional — restrito)" />
         </div>
+
+        {modalFotoAberto && (
+        <RecorteFoto aoConfirmar={receberFotoRecortada} aoFechar={() => setModalFotoAberto(false)} />
+        )}
 
         {erro && <div className="aviso-erro campo-inteiro">Erro ao salvar: {erro}</div>}
 
