@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { nomePais } from '../paises'
-import BarraSuperior from './BarraSuperior'
+import BarraSuperior from '../BarraSuperior'
 import FormularioMissao from './FormularioMissao'
 
 export default function PainelAdmin() {
