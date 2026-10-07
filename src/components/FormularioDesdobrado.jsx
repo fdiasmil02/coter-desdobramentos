@@ -1,4 +1,6 @@
 // Formulário de cadastro/edição de desdobrado — campos espelham a tabela desdobrados
+// A foto é guardada LOCALMENTE durante a edição e só enviada ao bucket
+// "fotos" DEPOIS que o registro é salvo com sucesso (evita erro de RLS).
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import RecorteFoto from '../RecorteFoto'
@@ -12,13 +14,11 @@ const POSTOS_PM = [
   'Cel', 'Ten Cel', 'Maj', 'Cap', '1º Ten', '2º Ten', 'Asp',
   '1º Sgt', '2º Sgt', '3º Sgt', 'Cb', 'Sd'
 ]
-
 // UFs (o banco guarda a sigla; a tela exibe como PM + Estado, ex.: PMRJ)
 const UFS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
   'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ]
-
 const SITUACOES = ['Na Missão', 'Leaving', 'Previsto', 'Retornou', 'Estendido']
 
 export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, aoCancelar }) {
@@ -34,6 +34,8 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
   const [email, setEmail] = useState(desdobrado?.contato_email ?? '')
   const [documento, setDocumento] = useState(desdobrado?.documento_referencia ?? '')
   const [fotoUrl, setFotoUrl] = useState(desdobrado?.foto_url ?? '')
+  // Foto aguardando envio (blob local) — só vai ao bucket após salvar o registro
+  const [fotoPendente, setFotoPendente] = useState(null)
   const [dataChegada, setDataChegada] = useState(desdobrado?.data_chegada ?? '')
   const [dataRetorno, setDataRetorno] = useState(desdobrado?.data_previsao_retorno ?? '')
   const [dataRetornoReal, setDataRetornoReal] = useState(desdobrado?.data_retorno_real ?? '')
@@ -41,46 +43,59 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
   const [observacoes, setObservacoes] = useState(desdobrado?.observacoes ?? '')
   const [erro, setErro] = useState(null)
   const [modalFotoAberto, setModalFotoAberto] = useState(false)
-  const [fotoSubindo, setFotoSubindo] = useState(false)
   const [aguardando, setAguardando] = useState(false)
+
+  // Libera a prévia local da memória do navegador (evita vazamento de blob:)
+  function liberarPrevia() {
+    if (fotoUrl.startsWith('blob:')) URL.revokeObjectURL(fotoUrl)
+  }
 
   function limpar() {
     setTipo(''); setMissaoId(''); setPosto(''); setQms(''); setEstadoPm('')
     setNomeGuerra(''); setNomeCompleto(''); setGenero(''); setTelWhats('')
-    setEmail(''); setDocumento(''); setFotoUrl(''); setDataChegada('')
-    setDataRetorno(''); setDataRetornoReal(''); setSituacao('Na Missão'); setObservacoes('')
+    setEmail(''); setDocumento('')
+    liberarPrevia()
+    setFotoUrl(''); setFotoPendente(null)
+    setDataChegada(''); setDataRetorno(''); setDataRetornoReal('')
+    setSituacao('Na Missão'); setObservacoes('')
     setErro(null)
   }
 
-  // Recebe o recorte do modal, envia ao bucket "fotos" e guarda a URL pública
-  async function receberFotoRecortada(blob) {
+  // Recebe o recorte do modal e guarda LOCALMENTE — nada é enviado ao Supabase aqui
+  function receberFotoRecortada(blob) {
     setModalFotoAberto(false)
     setErro(null)
-    setFotoSubindo(true)
-    const caminho = `desdobrados/${Date.now()}.jpg`
+    liberarPrevia()
+    setFotoPendente(blob)
+    setFotoUrl(URL.createObjectURL(blob)) // prévia local, sem custo de rede
+  }
+
+  // Envia a foto pendente ao bucket "fotos" e grava a URL pública no registro
+  async function enviarFotoPendente(idDoRegistro) {
+    const caminho = `desdobrados/${idDoRegistro}-${Date.now()}.jpg`
     const { error: erroUpload } = await supabase.storage
-        .from('fotos')
-        .upload(caminho, blob, { contentType: 'image/jpeg', upsert: true })
-    if (erroUpload) {
-        setErro('Falha no upload da foto: ' + erroUpload.message)
-        setFotoSubindo(false)
-        return
-    }
+      .from('fotos')
+      .upload(caminho, fotoPendente, { contentType: 'image/jpeg' })
+    if (erroUpload) return erroUpload.message
+
     const { data } = supabase.storage.from('fotos').getPublicUrl(caminho)
-    setFotoUrl(data.publicUrl)
-    setFotoSubindo(false)
-   }
+    const { error: erroUpdate } = await supabase
+      .from('desdobrados')
+      .update({ foto_url: data.publicUrl })
+      .eq('id', idDoRegistro)
+    if (erroUpdate) return erroUpdate.message
+
+    return null // tudo certo
+  }
 
   async function salvar(evento) {
     evento.preventDefault()
     setErro(null)
-
     // Validação de datas: previsão de retorno não pode ser anterior à chegada
     if (dataChegada && dataRetorno && dataRetorno < dataChegada) {
       setErro('A previsão de retorno não pode ser anterior à data de chegada.')
       return
     }
-
     const registro = {
       missao_id: missaoId,
       tipo,
@@ -93,39 +108,52 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
       contato_telefone_whatsapp: telWhats.trim() || null,
       contato_email: email.trim() || null,
       documento_referencia: documento.trim() || null,
-      foto_url: fotoUrl.trim() || null,
+      // Foto nova → grava null agora e atualiza depois do upload.
+      // Foto mantida → regrava a URL remota. Foto removida → grava null.
+      foto_url: fotoPendente ? null : (fotoUrl.trim() || null),
       data_chegada: dataChegada,
       data_previsao_retorno: dataRetorno,
       data_retorno_real: dataRetornoReal || null,
       situacao,
       observacoes: observacoes.trim() || null
     }
-
     setAguardando(true)
-    const { error } = desdobrado?.id
+    const { data: salvo, error } = desdobrado?.id
       ? await supabase.from('desdobrados')
           .update({ ...registro, atualizado_em: new Date().toISOString() })
           .eq('id', desdobrado.id)
-      : await supabase.from('desdobrados').insert(registro)
-    setAguardando(false)
+          .select()
+          .single()
+      : await supabase.from('desdobrados').insert(registro).select().single()
 
     if (error) {
+      setAguardando(false)
       setErro(error.message)
       return
     }
+
+    // Registro salvo sem erro → agora sim envia a foto ao bucket
+    if (fotoPendente) {
+      const erroFoto = await enviarFotoPendente(salvo.id)
+      if (erroFoto) {
+        setAguardando(false)
+        setErro(`Integrante salvo, mas o envio da foto falhou: ${erroFoto}`)
+        return
+      }
+    }
+
+    setAguardando(false)
     aoSalvar()
   }
 
   const listaPostos = tipo === 'Policial Militar' ? POSTOS_PM : POSTOS_EB
   const editando = Boolean(desdobrado?.id)
-
   return (
     <section className="form-desdobrado-section">
       <div className="alerta-privacidade">
         🔒 Os campos marcados com cadeado (Nome Completo, contatos, documento e observações) são
         restritos — visíveis apenas para a equipe autenticada no painel.
       </div>
-
       <form className="form-desdobrado" onSubmit={salvar}>
         {/* Seção 1 — Informações Básicas */}
         <h3 className="secao-titulo">Informações Básicas</h3>
@@ -174,7 +202,6 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
           <input value={nomeGuerra} onChange={e => setNomeGuerra(e.target.value)} required
             placeholder="Nome de guerra (público — aparece no mapa)" />
         </div>
-
         {/* Seção 2 — Dados Sensíveis / Restritos */}
         <h3 className="secao-titulo secao-restrita">🔒 Dados Sensíveis / Restritos</h3>
         <div>
@@ -206,23 +233,26 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
             placeholder="Documento de referência (opcional)" />
         </div>
         <div>
-            <label>Foto do Integrante</label>
-            <div className="foto-upload-linha">
-                {fotoUrl
-                ? <img src={fotoUrl} alt="Prévia da foto" className="foto-previa" />
-                : <div className="foto-previa foto-vazia">👤</div>}
-                <button type="button" className="botao-secundario-form"
-                onClick={() => setModalFotoAberto(true)} disabled={fotoSubindo}>
-                {fotoSubindo ? 'Enviando…' : fotoUrl ? 'Trocar foto' : 'Selecionar foto'}
-                </button>
-                {fotoUrl && (
-                <button type="button" className="botao-secundario-form" onClick={() => setFotoUrl('')}>
-                    Remover
-                </button>
-                )}
-            </div>
+          <label>Foto do Integrante</label>
+          <div className="foto-upload-linha">
+            {fotoUrl
+              ? <img src={fotoUrl} alt="Prévia da foto" className="foto-previa" />
+              : <div className="foto-previa foto-vazia">👤</div>}
+            <button type="button" className="botao-secundario-form"
+              onClick={() => setModalFotoAberto(true)}>
+              {fotoUrl ? 'Trocar foto' : 'Selecionar foto'}
+            </button>
+            {fotoUrl && (
+              <button type="button" className="botao-secundario-form" onClick={() => {
+                liberarPrevia()
+                setFotoUrl('')
+                setFotoPendente(null)
+              }}>
+                Remover
+              </button>
+            )}
+          </div>
         </div>
-
         {/* Seção 3 — Período de Desdobramento */}
         <h3 className="secao-titulo">Período de Desdobramento</h3>
         <div>
@@ -251,13 +281,10 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
           <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)}
             placeholder="Anotações internas (opcional — restrito)" />
         </div>
-
         {modalFotoAberto && (
-        <RecorteFoto aoConfirmar={receberFotoRecortada} aoFechar={() => setModalFotoAberto(false)} />
+          <RecorteFoto aoConfirmar={receberFotoRecortada} aoFechar={() => setModalFotoAberto(false)} />
         )}
-
         {erro && <div className="aviso-erro campo-inteiro">Erro ao salvar: {erro}</div>}
-
         <div className="form-rodape campo-inteiro">
           <button type="button" className="botao-secundario-form" onClick={limpar}>
             Limpar
