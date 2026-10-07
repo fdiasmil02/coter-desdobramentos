@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { nomePais } from './paises'
 import { formatarMesAno } from './formatos'
-import BarraSuperior from './components/BarraSuperior'
+import BarraSuperior from './BarraSuperior'
 import MapaPublico from './components/MapaPublico'
 import Contadores from './components/Contadores'
 
