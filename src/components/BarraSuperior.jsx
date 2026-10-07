@@ -2,7 +2,7 @@
 // Mostra o e-mail do usuário logado; o clique abre menu com Trocar senha e Sair.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from './supabaseClient'
+import { supabase } from '../supabaseClient'
 
 export default function BarraSuperior({ abaAtiva }) {
   const navegar = useNavigate()
