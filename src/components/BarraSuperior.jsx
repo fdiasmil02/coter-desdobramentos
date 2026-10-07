@@ -1,5 +1,6 @@
 // Headbar única do sistema — idêntica em todas as páginas que a usarem.
 // Mostra o e-mail do usuário logado; o clique abre menu com Trocar senha e Sair.
+// A sessão é monitorada em tempo real: logout ou login atualizam a barra na hora.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
@@ -13,13 +14,28 @@ export default function BarraSuperior({ abaAtiva }) {
   const [confirmaSenha, setConfirmaSenha] = useState('')
   const [msgSenha, setMsgSenha] = useState(null)   // texto de resultado (ok ou erro)
   const [aguardando, setAguardando] = useState(false)
+  const [toast, setToast] = useState(null)         // aviso temporário (ex.: deslogado)
   const refMenu = useRef(null)
 
-  // Detecta a sessão e exibe o e-mail
+  // Detecta a sessão atual E escuta mudanças em tempo real (login, logout, senha)
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data?.session) setEmail(data.session.user.email)
+      setEmail(data?.session?.user?.email ?? null)
     })
+
+    const { data: inscricao } = supabase.auth.onAuthStateChange((evento, sessao) => {
+      if (evento === 'SIGNED_OUT') {
+        setEmail(null)
+        setMenuAberto(false)
+        setModalSenha(false)
+        mostrarToast('Sessão encerrada com sucesso ✅')
+      } else if (sessao?.user) {
+        setEmail(sessao.user.email)
+      }
+    })
+
+    // Remove a escuta quando a página muda (evita escutas duplicadas)
+    return () => inscricao.subscription.unsubscribe()
   }, [])
 
   // Fecha o menu ao clicar fora dele
@@ -31,10 +47,16 @@ export default function BarraSuperior({ abaAtiva }) {
     return () => document.removeEventListener('mousedown', cliqueFora)
   }, [])
 
+  // Mostra um aviso temporário e o esconde após 4 segundos
+  function mostrarToast(texto) {
+    setToast(texto)
+    setTimeout(() => setToast(null), 4000)
+  }
+
   async function sair() {
     setMenuAberto(false)
-    await supabase.auth.signOut()
-    navegar('/')
+    await supabase.auth.signOut()  // o evento SIGNED_OUT cuida do resto
+    navegar('/')                   // volta ao mapa público
   }
 
   function abrirTrocaSenha() {
@@ -113,6 +135,9 @@ export default function BarraSuperior({ abaAtiva }) {
           </div>
         )}
       </nav>
+
+      {/* Aviso temporário (toast) — ex.: deslogado */}
+      {toast && <div className="toast-aviso">{toast}</div>}
 
       {/* Modal de troca de senha */}
       {modalSenha && (
