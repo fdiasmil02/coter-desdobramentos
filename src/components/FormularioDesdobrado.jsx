@@ -1,7 +1,7 @@
 // Formulário de cadastro/edição de desdobrado — campos espelham a tabela desdobrados
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
-import RecorteFoto from './RecorteFoto'
+import RecorteFoto from '../RecorteFoto'
 
 // Lista validada de posto/graduação — EB: Gen Ex a Sd; PM: Cel a Sd
 const POSTOS_EB = [
@@ -9,7 +9,7 @@ const POSTOS_EB = [
   '1º Ten', '2º Ten', 'Asp', 'S Ten', '1º Sgt', '2º Sgt', '3º Sgt', 'Cb', 'Sd'
 ]
 const POSTOS_PM = [
-  'Cel', 'Ten Cel', 'Maj', 'Cap', '1º Ten', '2º Ten',
+  'Cel', 'Ten Cel', 'Maj', 'Cap', '1º Ten', '2º Ten', 'Asp'
   '1º Sgt', '2º Sgt', '3º Sgt', 'Cb', 'Sd'
 ]
 
