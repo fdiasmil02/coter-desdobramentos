@@ -1,34 +1,26 @@
-// Painel admin: mesma headbar do mapa público + área de gestão conforme o protótipo
+// Painel admin: headbar única + gerenciamento de missões
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { nomePais } from '../paises'
+import BarraSuperior from './BarraSuperior'
 import FormularioMissao from './FormularioMissao'
 
 export default function PainelAdmin() {
   const navegar = useNavigate()
-  const [perfil, setPerfil] = useState(null)
   const [verificando, setVerificando] = useState(true)
   const [missoes, setMissoes] = useState([])
   const [stats, setStats] = useState([])
   const [modalMissao, setModalMissao] = useState(null) // null | 'nova' | objeto da missão
 
   useEffect(() => {
-    async function verificar() {
-      const { data } = await supabase.auth.getSession()
+    supabase.auth.getSession().then(({ data }) => {
       if (!data?.session) {
         navegar('/login')
         return
       }
-      const { data: perfilDados } = await supabase
-        .from('perfis')
-        .select('nome, nivel')
-        .eq('id', data.session.user.id)
-        .single()
-      setPerfil(perfilDados)
       setVerificando(false)
-    }
-    verificar()
+    })
   }, [navegar])
 
   async function carregarDados() {
@@ -44,33 +36,13 @@ export default function PainelAdmin() {
 
   const statsPorMissao = Object.fromEntries(stats.map(s => [s.missao_id, s]))
 
-  async function sair() {
-    await supabase.auth.signOut()
-    navegar('/')
-  }
-
   if (verificando) return <p className="carregando">Verificando acesso…</p>
 
   return (
     <>
-      {/* Headbar idêntica à da página do mapa público */}
-      <header className="barra-superior">
-        <div className="barra-marca">
-          <span className="emblema">🕊️</span>
-          <div>
-            <h1>Controle de Efetivos — Missões de Paz</h1>
-            <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
-          </div>
-        </div>
-        <nav className="abas">
-          <span className="aba inativa" onClick={() => navegar('/')}>🌐 Mapa Público</span>
-          <span className="aba ativa">🔒 Painel Admin</span>
-          {perfil?.nome && <span className="aba usuario-logado">👤 {perfil.nome}</span>}
-        </nav>
-      </header>
+      <BarraSuperior abaAtiva="admin" />
 
       <div className="app">
-        {/* Menu de abas do admin (sublinhado verde-água na ativa) */}
         <nav className="admin-nav">
           <button className="admin-nav-botao ativo">🗺️ Missões de Paz</button>
           <button className="admin-nav-botao" disabled title="Próxima etapa">👥 Efetivo Completo (com restritos)</button>

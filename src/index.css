@@ -402,3 +402,39 @@ body {
 
 /* ---------- Ajustes do admin ---------- */
 .admin-instrucao { font-size: 0.85rem; color: #8fa1bb; }
+
+/* ---------- Menu do usuário (clicar no e-mail) ---------- */
+.usuario-menu { position: relative; }
+.usuario-logado {
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.1); color: #4ade80;
+  font-weight: 600; cursor: pointer; font-family: inherit; font-size: 0.88rem;
+  max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.usuario-dropdown {
+  position: absolute; right: 0; top: calc(100% + 6px);
+  background: #131c30; border: 1px solid #243350; border-radius: 10px;
+  min-width: 190px; padding: 6px; z-index: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.usuario-dropdown button {
+  background: none; border: none; color: #e8edf6; text-align: left;
+  padding: 9px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+  font-family: inherit;
+}
+.usuario-dropdown button:hover { background: #1a2742; }
+
+/* ---------- Formulário de troca de senha ---------- */
+.form-senha { display: flex; flex-direction: column; gap: 4px; margin: 16px 0 4px; }
+.form-senha label { font-size: 0.8rem; font-weight: 600; color: #b8c5d9; margin-top: 8px; }
+.form-senha input {
+  background: #0d1526; border: 1px solid #243350; border-radius: 8px;
+  padding: 10px 12px; font-size: 0.95rem; color: #e8edf6; outline: none;
+}
+.form-senha input:focus { border-color: #2f6fd8; }
+.msg-senha-ok {
+  background: rgba(34, 197, 94, 0.12); color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 8px; padding: 10px; text-align: center; margin-top: 12px;
+}

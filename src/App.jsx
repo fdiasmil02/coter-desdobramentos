@@ -1,34 +1,18 @@
-// Página pública: barra superior + contadores + mapa com painel lateral de missões
+// Página pública: contadores + mapa mundi + painel lateral de missões
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { nomePais } from './paises'
+import { formatarMesAno } from './formatos'
+import BarraSuperior from './components/BarraSuperior'
 import MapaPublico from './components/MapaPublico'
 import Contadores from './components/Contadores'
-import { formatarMesAno } from './formatos'
 
 export default function App() {
-  const navegar = useNavigate()
   const [missoes, setMissoes] = useState([])
   const [stats, setStats] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
-  const [logado, setLogado] = useState(null)
   const [focoMissao, setFocoMissao] = useState(null)
-
-  // Indicador de sessão no cabeçalho
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      const sessao = data?.session
-      if (!sessao) return setLogado(null)
-      const { data: perfil } = await supabase
-        .from('perfis')
-        .select('nome')
-        .eq('id', sessao.user.id)
-        .single()
-      setLogado(perfil?.nome ?? sessao.user.email)
-    })
-  }, [])
 
   useEffect(() => {
     async function carregarDados() {
@@ -50,22 +34,7 @@ export default function App() {
 
   return (
     <>
-      <header className="barra-superior">
-        <div className="barra-marca">
-          <span className="emblema">🕊️</span>
-          <div>
-            <h1>Controle de Efetivos — Missões de Paz</h1>
-            <p className="subtitulo">Desdobramento de Militares e Policiais Militares Brasileiros</p>
-          </div>
-        </div>
-        <nav className="abas">
-          <span className="aba ativa">🌐 Mapa Público</span>
-          <span className="aba inativa" onClick={() => navegar(logado ? '/admin' : '/login')}>
-            🔒 Painel Admin
-          </span>
-          {logado && <span className="aba usuario-logado">👤 {logado}</span>}
-        </nav>
-      </header>
+      <BarraSuperior abaAtiva="mapa" />
 
       <div className="app">
         <Contadores
@@ -86,7 +55,6 @@ export default function App() {
             <MapaPublico
               missoes={missoes}
               statsPorMissao={statsPorMissao}
-              logado={logado}
               focoMissao={focoMissao}
               aoFocarConcluido={() => setFocoMissao(null)}
             />
