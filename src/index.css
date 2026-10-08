@@ -628,3 +628,11 @@ body {
 
 /* Foto do modal de detalhes 20% maior (54x58 -> 65x70), sem alterar o restante do layout */
 .ef-detalhe-compacto .ef-detalhe-foto { width:65px; height:70px; flex-basis:65px; }
+
+/* Ações de efetivo — botões compactos com ícones */
+.ef-acao-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:7px 12px; min-height:32px; border-radius:7px; font-size:.78rem; font-weight:600; line-height:1; white-space:nowrap; cursor:pointer; transition:background .15s,border-color .15s,transform .15s; }
+.ef-acao-ver { color:#b7d9ff; background:#152e50; border:1px solid #305681; }
+.ef-acao-ver:hover { background:#214574; border-color:#4b88c8; }
+.ef-acao-editar { color:#ffdbab; background:#332719; border:1px solid #73502a; }
+.ef-acao-editar:hover { background:#4b341e; border-color:#bc8340; }
+.ef-acoes { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
