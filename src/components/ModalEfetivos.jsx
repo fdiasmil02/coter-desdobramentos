@@ -1,3 +1,4 @@
+import { Eye } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ModalDetalhesMilitar from './ModalDetalhesMilitar'
 // Modal completo de efetivos de uma missão — visível apenas para usuários logados
@@ -149,7 +150,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
                     <td>
                       <span className={`badge-sit ${CLASSE_SITUACAO[e.situacao] ?? 'cinza'}`}>{e.situacao}</span>
                     </td>
-                    <td><button type="button" className="me-botao-detalhes" onClick={() => setDetalhe(e)}>Detalhes</button></td>
+                    <td><button type="button" className="ef-acao-btn ef-acao-ver" onClick={() => setDetalhe(e)}><Eye size={15} aria-hidden="true" /> Detalhes</button></td>
                   </tr>
                 ))}
               </tbody>
