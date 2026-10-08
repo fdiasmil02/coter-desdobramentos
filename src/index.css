@@ -494,3 +494,21 @@ body {
 .recorte-canvas { cursor: grab; border-radius: 8px; background: #000; touch-action: none; }
 .recorte-img-oculta { display: none; }
 .recorte-acoes { display: flex; justify-content: flex-end; gap: 8px; }
+/* Popup ancorado ao pin: estilo do sistema e cinco indicadores compactos */
+.popup-missao .leaflet-popup-content-wrapper { background: #131c30; color: #e8edf6; border: 1px solid #243350; border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,.55); }
+.popup-missao .leaflet-popup-content { margin: 0; width: min(440px, calc(100vw - 64px)) !important; max-width: 440px; }
+.popup-missao .leaflet-popup-tip { background: #131c30; }
+.popup-missao .modal-pin { width: 100%; max-width: none; padding: 16px; border: 0; box-shadow: none; background: transparent; }
+.popup-missao .modal-stats { grid-template-columns: repeat(5, minmax(0,1fr)); gap: 5px; }
+.popup-missao .modal-stats > div { padding: 8px 2px; min-width: 0; }
+.popup-missao .modal-valor { font-size: 1.12rem; }
+.popup-missao .modal-rotulo { font-size: .61rem; line-height: 1.2; }
+.popup-missao .modal-sigla { font-size: 1.2rem; }
+.popup-missao .modal-sub { font-size: .75rem; }
+.popup-missao .modal-nome { font-size: .83rem; margin: 8px 0 12px; }
+@media(max-width:420px) { .popup-missao .modal-pin { padding: 10px; } .popup-missao .modal-stats { gap: 3px; } .popup-missao .modal-rotulo { font-size: .55rem; } }
+/* Identificação visual do vínculo: EB verde, PM azul */
+.tabela-efetivos tbody tr.linha-efetivo-eb td { background: rgba(34,197,94,.12); }
+.tabela-efetivos tbody tr.linha-efetivo-pm td { background: rgba(59,130,246,.14); }
+.tabela-efetivos tbody tr.linha-efetivo-eb td:first-child { border-left: 3px solid #22c55e; }
+.tabela-efetivos tbody tr.linha-efetivo-pm td:first-child { border-left: 3px solid #3b82f6; }
