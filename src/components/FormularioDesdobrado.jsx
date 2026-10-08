@@ -27,6 +27,9 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
   const [posto, setPosto] = useState(desdobrado?.posto_graduacao ?? '')
   const [qms, setQms] = useState(desdobrado?.qms ?? '')
   const [estadoPm, setEstadoPm] = useState(desdobrado?.estado_pm ?? '')
+  const [omOrigem, setOmOrigem] = useState(desdobrado?.om_origem ?? '')
+  const [funcaoAtual, setFuncaoAtual] = useState(desdobrado?.funcao_atual ?? '')
+  const [cidadeDesdobramento, setCidadeDesdobramento] = useState(desdobrado?.cidade_desdobramento ?? '')
   const [nomeGuerra, setNomeGuerra] = useState(desdobrado?.nome_guerra ?? '')
   const [nomeCompleto, setNomeCompleto] = useState(desdobrado?.nome_completo ?? '')
   const [genero, setGenero] = useState(desdobrado?.genero ?? '')
@@ -55,6 +58,7 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
 
   function limpar() {
     setTipo(''); setMissaoId(''); setPosto(''); setQms(''); setEstadoPm('')
+    setOmOrigem(''); setFuncaoAtual(''); setCidadeDesdobramento('')
     setNomeGuerra(''); setNomeCompleto(''); setGenero(''); setTelWhats('')
     setEmail(''); setDocumento('')
     liberarPrevia()
@@ -110,6 +114,9 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
       posto_graduacao: posto,
       qms: tipo === 'Militar do EB' ? (qms.trim() || null) : null,
       estado_pm: tipo === 'Policial Militar' ? estadoPm : null,
+      om_origem: omOrigem.trim() || null,
+      funcao_atual: funcaoAtual.trim() || null,
+      cidade_desdobramento: cidadeDesdobramento.trim() || null,
       nome_guerra: nomeGuerra.trim(),
       genero,
       nome_completo: nomeCompleto.trim(),
@@ -212,6 +219,18 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
           <label>Nome de Guerra *</label>
           <input value={nomeGuerra} onChange={e => setNomeGuerra(e.target.value)} required
             placeholder="Nome de guerra (público — aparece no mapa)" />
+        </div>
+        <div>
+          <label>OM de origem (opcional) 🔒</label>
+          <input value={omOrigem} onChange={e => setOmOrigem(e.target.value)} placeholder="Organização Militar de origem" />
+        </div>
+        <div>
+          <label>Função atual (opcional) 🔒</label>
+          <input value={funcaoAtual} onChange={e => setFuncaoAtual(e.target.value)} placeholder="Função exercida na missão" />
+        </div>
+        <div>
+          <label>Cidade de desdobramento (opcional) 🔒</label>
+          <input value={cidadeDesdobramento} onChange={e => setCidadeDesdobramento(e.target.value)} placeholder="Cidade de desdobramento" />
         </div>
         {/* Seção 2 — Dados Sensíveis / Restritos */}
         <h3 className="secao-titulo secao-restrita">🔒 Dados Sensíveis / Restritos</h3>
