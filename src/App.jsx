@@ -66,6 +66,7 @@ export default function App() {
           <section className="linha-principal">
             <MapaPublico
               missoes={missoes}
+              logado={logado}
               statsPorMissao={statsPorMissao}
               focoMissao={focoMissao}
               aoFocarConcluido={() => setFocoMissao(null)}
