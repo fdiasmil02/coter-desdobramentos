@@ -112,50 +112,39 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
         </div>
       }
       {detalhe && <div className="modal-overlay" onClick={() => setDetalhe(null)}>
-        <div className="modal ef-detalhe" role="dialog" aria-modal="true" aria-labelledby="ef-detalhe-titulo" onClick={e => e.stopPropagation()}>
+        <div className="modal ef-detalhe ef-detalhe-compacto" role="dialog" aria-modal="true" aria-labelledby="ef-detalhe-titulo" onClick={e => e.stopPropagation()}>
           <div className="ef-detalhe-topo">
             {detalhe.foto_url
               ? <img className="ef-detalhe-foto" src={detalhe.foto_url} alt={`Foto de ${detalhe.nome_guerra}`} />
               : <div className="ef-detalhe-foto ef-detalhe-foto-vazia" aria-label="Sem foto cadastrada">👤</div>}
             <div className="ef-detalhe-identificacao">
-              <span className="ef-detalhe-sobretitulo">FICHA DO EFETIVO · {siglaMissao(detalhe.missao_id)}</span>
-              <h2 id="ef-detalhe-titulo">{detalhe.nome_guerra}</h2>
-              <p className="ef-detalhe-posto">{postoFormatado(detalhe)}</p>
-              <span className={`ef-badge-situacao ${corSituacao(detalhe.situacao)}`}>{detalhe.situacao}</span>
+              <h2 id="ef-detalhe-titulo">{postoFormatado(detalhe)} {detalhe.nome_guerra}</h2>
+              <p className="ef-detalhe-nome-completo">{detalhe.nome_completo || '—'}</p>
             </div>
             <button type="button" className="modal-fechar ef-detalhe-fechar" aria-label="Fechar detalhes" onClick={() => setDetalhe(null)}>×</button>
           </div>
-
-          <div className="ef-detalhe-corpo">
-            <section className="ef-detalhe-secao">
-              <h3>Identificação</h3>
-              <dl>
-                {[['Nome completo', detalhe.nome_completo], ['Força', detalhe.tipo], ['Gênero', detalhe.genero], ['Missão', siglaMissao(detalhe.missao_id)], ['Documento de referência', detalhe.documento_referencia]].map(([rotulo, valor]) =>
-                  <div key={rotulo}><dt>{rotulo}</dt><dd>{valor || '—'}</dd></div>
-                )}
-              </dl>
-            </section>
-            <section className="ef-detalhe-secao">
-              <h3>Período de desdobramento</h3>
-              <dl>
-                {[['Data de chegada', formatarData(detalhe.data_chegada)], ['Retorno previsto', formatarData(detalhe.data_previsao_retorno)], ['Retorno efetivo', detalhe.data_retorno_real ? formatarData(detalhe.data_retorno_real) : '—']].map(([rotulo, valor]) =>
-                  <div key={rotulo}><dt>{rotulo}</dt><dd>{valor || '—'}</dd></div>
-                )}
-              </dl>
-            </section>
-            <section className="ef-detalhe-secao">
-              <h3>Contato e observações</h3>
-              <dl>
-                {[['WhatsApp', detalhe.contato_telefone_whatsapp], ['E-mail', detalhe.contato_email], ['Observações', detalhe.observacoes]].map(([rotulo, valor]) =>
-                  <div key={rotulo} className={rotulo === 'Observações' ? 'ef-detalhe-campo-largo' : ''}><dt>{rotulo}</dt><dd>{valor || '—'}</dd></div>
-                )}
-              </dl>
-            </section>
-          </div>
-
+          <dl className="ef-detalhe-grade">
+            {[
+              ['Tipo', detalhe.tipo],
+              ['Missão', siglaMissao(detalhe.missao_id)],
+              ['Situação', detalhe.situacao],
+              ['Gênero', detalhe.genero],
+              ['Retorno previsto', formatarData(detalhe.data_previsao_retorno)],
+              ['Chegada', formatarData(detalhe.data_chegada)],
+              ['WhatsApp', detalhe.contato_telefone_whatsapp],
+              ['Retorno real', detalhe.data_retorno_real ? formatarData(detalhe.data_retorno_real) : '—'],
+              ['Documento', detalhe.documento_referencia],
+              ['E-mail', detalhe.contato_email],
+              ['Observações', detalhe.observacoes]
+            ].map(([rotulo, valor]) =>
+              <div key={rotulo} className={rotulo === 'Observações' ? 'ef-detalhe-observacoes' : ''}>
+                <dt>{rotulo}</dt><dd>{valor || '—'}</dd>
+              </div>
+            )}
+          </dl>
           <div className="ef-detalhe-acoes">
-            <button type="button" className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button>
             {podeEditar && <button type="button" className="botao-primario" onClick={() => { const registro = detalhe; setDetalhe(null); aoEditar?.(registro) }}>✏️ Editar cadastro</button>}
+            <button type="button" className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button>
           </div>
         </div>
       </div>}
