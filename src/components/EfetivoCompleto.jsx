@@ -16,6 +16,8 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
   const [tipo, setTipo] = useState('')
   const [situacao, setSituacao] = useState('')
   const [detalhe, setDetalhe] = useState(null)
+  const [historicoLeaving, setHistoricoLeaving] = useState([])
+  const [erroHistorico, setErroHistorico] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
@@ -44,6 +46,21 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
     carregar()
     return () => { ativo = false }
   }, [])
+
+  useEffect(() => {
+    if (!detalhe?.id) { setHistoricoLeaving([]); setErroHistorico(''); return }
+    let ativo = true
+    setHistoricoLeaving([])
+    setErroHistorico('')
+    supabase.from('periodos_leaving').select('id,data_inicio,data_fim,destino,registrado_em,origem')
+      .eq('desdobrado_id', detalhe.id).order('registrado_em', { ascending: false })
+      .then(({ data, error }) => {
+        if (!ativo) return
+        if (error) setErroHistorico(error.message)
+        else setHistoricoLeaving(data ?? [])
+      })
+    return () => { ativo = false }
+  }, [detalhe?.id])
 
   const lista = useMemo(() => registros.filter(r => {
     const texto = Object.values(r).filter(v => v != null && typeof v !== 'object').join(' ').toLocaleLowerCase('pt-BR')
@@ -142,6 +159,16 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
               </div>
             )}
           </dl>
+          <div className="ef-historico-leaving">
+            <h3>Histórico de Leaving</h3>
+            {erroHistorico && <p className="aviso-erro">Não foi possível carregar o histórico: {erroHistorico}</p>}
+            {!erroHistorico && historicoLeaving.length === 0 && <p className="ef-historico-vazio">Nenhum período registrado.</p>}
+            {historicoLeaving.map(p => <div className="ef-historico-item" key={p.id}>
+              <strong>{formatarData(p.data_inicio)} até {formatarData(p.data_fim)}</strong>
+              <span>{p.destino ? `Destino previsto: ${p.destino}` : 'Destino não informado'}</span>
+              <small>Registrado em {new Date(p.registrado_em).toLocaleString('pt-BR')}</small>
+            </div>)}
+          </div>
           <div className="ef-detalhe-acoes">
             {podeEditar && <button type="button" className="botao-primario" onClick={() => { const registro = detalhe; setDetalhe(null); aoEditar?.(registro) }}>✏️ Editar cadastro</button>}
             <button type="button" className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button>
