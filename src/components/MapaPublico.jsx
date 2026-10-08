@@ -106,7 +106,7 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
               <div>
                 <div className="modal-sigla">{missaoSelecionada.sigla}</div>
                 <div className="modal-sub">
-                  {nomePais(missaoSelecionada.pais)} · {missaoSelecionada.status}
+                  {nomePais(missaoSelecionada.pais)} · QG: {missaoSelecionada.qg_missao} · {missaoSelecionada.status}
                 </div>
               </div>
               <button className="modal-fechar" onClick={() => setMissaoSelecionada(null)}>×</button>
@@ -118,16 +118,20 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
                 <span className="modal-rotulo">Efetivo Total</span>
               </div>
               <div>
+                <span className="modal-valor">{s ? Number(s.efetivo_eb) : 0}</span>
+                <span className="modal-rotulo">Efetivo EB</span>
+              </div>
+              <div>
+                <span className="modal-valor">{s ? Number(s.efetivo_pm) : 0}</span>
+                <span className="modal-rotulo">Efetivo PM</span>
+              </div>
+              <div>
                 <span className="modal-valor modal-valor-rosa">{s ? Number(s.efetivo_feminino) : 0}</span>
                 <span className="modal-rotulo">Mulheres (♀)</span>
               </div>
               <div>
                 <span className="modal-valor modal-valor-laranja">{s ? Number(s.efetivo_leaving) : 0}</span>
                 <span className="modal-rotulo">Em Leaving</span>
-              </div>
-              <div>
-                <span className="modal-valor">{missaoSelecionada.qg_missao}</span>
-                <span className="modal-rotulo">QG da Missão</span>
               </div>
             </div>
 
