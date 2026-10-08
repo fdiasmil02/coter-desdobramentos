@@ -26,7 +26,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
       setErro(null)
       const { data, error } = await supabase
         .from('desdobrados')
-        .select('tipo, posto_graduacao, nome_guerra, data_chegada, data_previsao_retorno, situacao')
+        .select('tipo, posto_graduacao, nome_guerra, data_chegada, data_previsao_retorno, situacao, qms, estado_pm')
         .eq('missao_id', missao.id)
         .order('data_chegada')
       if (error) setErro(error.message)
@@ -56,28 +56,33 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
               <span className="me-badge">📍 {missao.qg_missao}, {nomePais(missao.pais)}</span>
               <span className={`me-badge ${missao.status === 'Ativa' ? 'ativa' : ''}`}>{missao.status}</span>
             </div>
+            <p className="modal-sub">Mandato ONU: {mandato}</p>
             <p className="modal-nome">{missao.nome_completo}</p>
           </div>
           <button className="modal-fechar" onClick={aoFechar}>×</button>
         </div>
 
         <div className="modal-stats">
-          <div>
-            <span className="modal-valor modal-valor-branco">{stats ? Number(stats.efetivo_total) : 0}</span>
-            <span className="modal-rotulo">Efetivo Total</span>
-          </div>
-          <div>
-            <span className="modal-valor modal-valor-rosa">{stats ? Number(stats.efetivo_feminino) : 0}</span>
-            <span className="modal-rotulo">Mulheres (♀)</span>
-          </div>
-          <div>
-            <span className="modal-valor modal-valor-laranja">{stats ? Number(stats.efetivo_leaving) : 0}</span>
-            <span className="modal-rotulo">Em Leaving</span>
-          </div>
-          <div>
-            <span className="modal-valor modal-valor-branco">{mandato}</span>
-            <span className="modal-rotulo">Mandato ONU</span>
-          </div>
+              <div>
+                <span className="modal-valor">{stats ? Number(stats.efetivo_total) : 0}</span>
+                <span className="modal-rotulo">Efetivo Total</span>
+              </div>
+              <div>
+                <span className="modal-valor">{stats ? Number(stats.efetivo_eb) : 0}</span>
+                <span className="modal-rotulo">Efetivo EB</span>
+              </div>
+              <div>
+                <span className="modal-valor">{stats ? Number(stats.efetivo_pm) : 0}</span>
+                <span className="modal-rotulo">Efetivo PM</span>
+              </div>
+              <div>
+                <span className="modal-valor modal-valor-rosa">{stats ? Number(stats.efetivo_feminino) : 0}</span>
+                <span className="modal-rotulo">Mulheres (♀)</span>
+              </div>
+              <div>
+                <span className="modal-valor modal-valor-laranja">{stats ? Number(stats.efetivo_leaving) : 0}</span>
+                <span className="modal-rotulo">Em Leaving</span>
+              </div>
         </div>
 
         <div className="efetivos-filtros">
@@ -123,7 +128,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
               <tbody>
                 {listaFiltrada.map((e, i) => (
                   <tr key={i}>
-                    <td>{e.posto_graduacao}</td>
+                    <td>{[e.posto_graduacao, e.tipo === 'Militar do EB' ? e.qms : e.tipo === 'Policial Militar' ? `PM${(e.estado_pm ?? '').replace(/^PM/i, '').replace(/\s/g, '').toUpperCase()}` : null].filter(Boolean).join(' ')}</td>
                     <td>{e.nome_guerra}</td>
                     <td>{formatarData(e.data_chegada)}</td>
                     <td>{formatarData(e.data_previsao_retorno)}</td>
