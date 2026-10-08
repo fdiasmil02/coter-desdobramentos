@@ -157,7 +157,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
           </div>
         )}
 
-        {detalhe && <ModalDetalhesMilitar detalhe={detalhe} siglaMissao={() => missao.sigla} podeEditar={podeEditar} aoFechar={() => setDetalhe(null)} aoEditar={registro => navegar('/admin', { state: { editarDesdobrado: registro } })} />}
+        {detalhe && <div onClick={evento => evento.stopPropagation()}><ModalDetalhesMilitar detalhe={detalhe} siglaMissao={() => missao.sigla} podeEditar={podeEditar} aoFechar={() => setDetalhe(null)} aoEditar={registro => navegar('/admin', { state: { editarDesdobrado: registro } })} /></div>}
         <div className="me-rodape">
           <button className="botao-fechar-modal" onClick={aoFechar}>Fechar</button>
         </div>
