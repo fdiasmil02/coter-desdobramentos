@@ -557,3 +557,33 @@ body {
 /* Gênero: contraste de texto independente da cor EB/PM da linha */
 .ef-tabela td .ef-genero-masculino { color:#93c5fd; font-weight:700; }
 .ef-tabela td .ef-genero-feminino { color:#f9a8d4; font-weight:700; }
+
+/* Ficha de detalhes do efetivo: hierarquia visual e foto de destaque */
+.ef-detalhe.modal { width:min(740px,calc(100vw - 32px)); max-width:740px; max-height:min(90vh,850px); padding:0; overflow-y:auto; background:#121c30; border:1px solid #2a3b59; border-radius:16px; box-shadow:0 24px 70px rgba(0,0,0,.55); }
+.ef-detalhe-topo { position:relative; display:flex; align-items:center; gap:22px; padding:26px 64px 24px 28px; background:linear-gradient(115deg,#1b2e4c,#131e33 75%); border-bottom:1px solid #2b3c59; }
+.ef-detalhe-foto { display:block; width:116px; height:140px; flex:0 0 116px; object-fit:cover; object-position:center top; border:2px solid #44648e; border-radius:12px; background:#0c1526; box-shadow:0 8px 20px rgba(0,0,0,.25); }
+.ef-detalhe-foto-vazia { display:grid; place-items:center; font-size:3.2rem; color:#90a8c8; }
+.ef-detalhe-identificacao { min-width:0; }
+.ef-detalhe-sobretitulo { display:block; font-size:.7rem; font-weight:700; letter-spacing:.11em; color:#79b9f6; margin-bottom:9px; }
+.ef-detalhe-identificacao h2 { margin:0 0 5px; font-size:1.65rem; line-height:1.2; color:#f7faff; }
+.ef-detalhe-posto { margin:0 0 14px; color:#b9cbe3; font-size:1rem; font-weight:600; }
+.ef-detalhe-fechar { position:absolute; top:18px; right:20px; }
+.ef-detalhe-corpo { display:grid; gap:22px; padding:24px 28px 26px; }
+.ef-detalhe-secao { min-width:0; }
+.ef-detalhe-secao h3 { margin:0 0 14px; padding-bottom:9px; border-bottom:1px solid #293c59; color:#80bfff; font-size:.84rem; font-weight:700; letter-spacing:.02em; }
+.ef-detalhe-secao dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px 24px; margin:0; }
+.ef-detalhe-secao dt { margin:0 0 5px; font-size:.75rem; color:#90a7c5; }
+.ef-detalhe-secao dd { margin:0; color:#f1f5fc; font-size:.94rem; line-height:1.45; overflow-wrap:anywhere; white-space:pre-wrap; }
+.ef-detalhe-campo-largo { grid-column:1 / -1; }
+.ef-detalhe-acoes { display:flex; align-items:center; justify-content:flex-end; gap:14px; padding:18px 28px 22px; border-top:1px solid #293c59; background:#10192b; }
+.ef-detalhe-acoes button { min-height:42px; padding:10px 20px; border-radius:9px; cursor:pointer; }
+@media(max-width:560px) {
+  .ef-detalhe-topo { gap:14px; padding:20px 48px 20px 16px; }
+  .ef-detalhe-foto { width:86px; height:108px; flex-basis:86px; }
+  .ef-detalhe-identificacao h2 { font-size:1.3rem; }
+  .ef-detalhe-sobretitulo { font-size:.62rem; }
+  .ef-detalhe-corpo { padding:20px 16px; gap:20px; }
+  .ef-detalhe-secao dl { grid-template-columns:1fr; gap:13px; }
+  .ef-detalhe-acoes { padding:16px; gap:10px; }
+  .ef-detalhe-acoes button { flex:1; padding:10px; }
+}
