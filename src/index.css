@@ -512,3 +512,13 @@ body {
 .tabela-efetivos tbody tr.linha-efetivo-pm td { background: rgba(59,130,246,.14); }
 .tabela-efetivos tbody tr.linha-efetivo-eb td:first-child { border-left: 3px solid #22c55e; }
 .tabela-efetivos tbody tr.linha-efetivo-pm td:first-child { border-left: 3px solid #3b82f6; }
+
+/* Cinco cartões em linha também no modal padrão e no de efetivos */
+.modal-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.modal-stats > div { min-width: 0; padding: 9px 3px; }
+.modal-stats .modal-rotulo { font-size: .66rem; line-height: 1.2; }
+.modal-valor-verde { color: #4ade80 !important; }
+.modal-valor-azul { color: #60a5fa !important; }
+.modal-valor-branco { color: #f4f7fc !important; }
+/* Leaflet: o popup precisa ficar sobre os demais elementos do mapa */
+.mapa .leaflet-popup-pane { z-index: 700; }
