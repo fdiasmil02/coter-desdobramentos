@@ -608,3 +608,13 @@ body {
   .ef-detalhe-compacto .ef-detalhe-identificacao h2 { font-size:1rem; }
   .ef-detalhe-compacto .ef-detalhe-acoes { padding:12px 14px 14px; }
 }
+
+/* Períodos de Leaving e histórico auditável */
+.ef-leaving-aviso { margin:0; color:#a8c3e7; font-size:.82rem; line-height:1.5; }
+.ef-historico-leaving { margin:12px 20px 0; padding:14px 0 4px; border-top:1px solid #344c70; }
+.ef-historico-leaving h3 { margin:0 0 10px; color:#a8cdfc; font-size:.83rem; font-weight:700; }
+.ef-historico-vazio { color:#91a8c6; font-size:.8rem; margin:0 0 10px; }
+.ef-historico-item { display:flex; flex-direction:column; gap:3px; padding:10px 0; border-bottom:1px solid rgba(145,169,204,.15); font-size:.8rem; }
+.ef-historico-item strong { color:#eef5ff; }
+.ef-historico-item span { color:#c9d8ec; }
+.ef-historico-item small { color:#91a8c6; }
