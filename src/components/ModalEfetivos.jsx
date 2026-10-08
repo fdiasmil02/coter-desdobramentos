@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react'
+import { Eye } from './IconesAcoes'
 import { useNavigate } from 'react-router-dom'
 import ModalDetalhesMilitar from './ModalDetalhesMilitar'
 // Modal completo de efetivos de uma missão — visível apenas para usuários logados
