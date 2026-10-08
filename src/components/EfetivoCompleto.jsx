@@ -33,11 +33,11 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
   useEffect(() => {
     let ativo = true
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data?.user) return
-      const { data: perfil, error } = await supabase.from('perfis').select('nivel').eq('id', data.user.id).single()
+      if (!data?.user) { if (ativo) setErro('Sessão não encontrada. Entre novamente.'); return }
+      const { data: nivelBanco, error } = await supabase.rpc('meu_nivel')
       if (ativo) {
-        setNivel(perfil?.nivel ?? 'visualizador')
-        if (error) setErro('Não foi possível confirmar o nível de acesso.')
+        setNivel(error ? null : nivelBanco)
+        if (error) setErro('Não foi possível confirmar as permissões de edição: ' + error.message)
       }
     })
     carregar()
@@ -99,9 +99,9 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
                   <tr className={r.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : 'linha-efetivo-pm'}>
                     <td><strong>{postoFormatado(r)}</strong></td>
                     <td><div className="ef-pessoa">{r.foto_url ? <img src={r.foto_url} alt="" /> : <span className="ef-avatar">👤</span>}<span><strong>{r.nome_guerra}</strong><small>{r.nome_completo}</small></span></div></td>
-                    <td>{r.genero || '—'}</td><td>{formatarData(r.data_chegada)}</td><td>{formatarData(r.data_previsao_retorno)}</td>
+                    <td><span className={r.genero === 'Masculino' ? 'ef-genero-masculino' : r.genero === 'Feminino' ? 'ef-genero-feminino' : ''}>{r.genero || '—'}</span></td><td>{formatarData(r.data_chegada)}</td><td>{formatarData(r.data_previsao_retorno)}</td>
                     <td><span className={`ef-badge-situacao ${corSituacao(r.situacao)}`}>{r.situacao}</span></td>
-                    <td><div className="ef-acoes"><button onClick={() => setDetalhe(r)}>Detalhes</button>{podeEditar && <button onClick={() => aoEditar(r)}>Editar</button>}</div></td>
+                    <td><div className="ef-acoes"><button onClick={() => setDetalhe(r)}>Detalhes</button>{podeEditar && <button onClick={() => aoEditar?.(r)}>Editar</button>}</div></td>
                   </tr>
                 </Fragment>
               })}
@@ -116,7 +116,7 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
           <dl>
             {[['Nome completo', detalhe.nome_completo], ['Missão', siglaMissao(detalhe.missao_id)], ['Tipo', detalhe.tipo], ['Gênero', detalhe.genero], ['Situação', detalhe.situacao], ['Chegada', formatarData(detalhe.data_chegada)], ['Retorno previsto', formatarData(detalhe.data_previsao_retorno)], ['Retorno real', detalhe.data_retorno_real ? formatarData(detalhe.data_retorno_real) : '—'], ['WhatsApp', detalhe.contato_telefone_whatsapp], ['E-mail', detalhe.contato_email], ['Documento', detalhe.documento_referencia], ['Observações', detalhe.observacoes]].map(([k,v]) => <div key={k}><dt>{k}</dt><dd>{v || '—'}</dd></div>)}
           </dl>
-          <div className="me-rodape"><button className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button></div>
+          <div className="me-rodape">{podeEditar && <button className="botao-primario" onClick={() => { const registro = detalhe; setDetalhe(null); aoEditar?.(registro) }}>✏️ Editar cadastro</button>}<button className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button></div>
         </div>
       </div>}
 
