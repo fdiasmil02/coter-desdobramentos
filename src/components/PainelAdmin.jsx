@@ -130,12 +130,15 @@ export default function PainelAdmin() {
             {msgDesdobrado && <div className="msg-sucesso">{msgDesdobrado}</div>}
 
             <FormularioDesdobrado
+              key={desdobradoEmEdicao?.id ?? 'novo'}
+              desdobrado={desdobradoEmEdicao}
+              aoCancelar={desdobradoEmEdicao ? () => { setDesdobradoEmEdicao(null); setAba('efetivo') } : undefined}
               missoes={missoes}
               aoSalvar={() => {
                 carregarDados()
                 setDesdobradoEmEdicao(null)
                 setAba('efetivo')
-                setMsgDesdobrado('Desdobrado salvo com sucesso ✅')
+                setMsgDesdobrado(desdobradoEmEdicao ? 'Cadastro atualizado com sucesso ✅' : 'Desdobrado salvo com sucesso ✅')
                 setTimeout(() => setMsgDesdobrado(null), 4000)
               }}
             />
