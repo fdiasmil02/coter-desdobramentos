@@ -123,6 +123,9 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
       data_previsao_retorno: dataRetorno,
       data_retorno_real: dataRetornoReal || null,
       situacao,
+      leaving_inicio: situacao === 'Leaving' ? leavingInicio : (desdobrado?.leaving_inicio ?? null),
+      leaving_fim: situacao === 'Leaving' ? leavingFim : (desdobrado?.leaving_fim ?? null),
+      leaving_destino: situacao === 'Leaving' ? (leavingDestino.trim() || null) : (desdobrado?.leaving_destino ?? null),
       observacoes: observacoes.trim() || null
     }
     setAguardando(true)
