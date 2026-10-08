@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom'
+import ModalDetalhesMilitar from './ModalDetalhesMilitar'
 // Modal completo de efetivos de uma missão — visível apenas para usuários logados
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { nomePais } from '../paises'
-import { formatarData, formatarMesAno } from '../formatos'
+import { formatarMesAno } from '../formatos'
 
 const CLASSE_SITUACAO = {
   'Na Missão': 'verde',
@@ -13,6 +15,9 @@ const CLASSE_SITUACAO = {
 }
 
 export default function ModalEfetivos({ missao, stats, aoFechar }) {
+  const navegar = useNavigate()
+  const [detalhe, setDetalhe] = useState(null)
+  const [podeEditar, setPodeEditar] = useState(false)
   const [efetivos, setEfetivos] = useState([])
   const [busca, setBusca] = useState('')
   const [filtroSituacao, setFiltroSituacao] = useState('Todas')
@@ -21,12 +26,22 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
   const [erro, setErro] = useState(null)
 
   useEffect(() => {
+    let ativo = true
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data?.user) return
+      const { data: perfil } = await supabase.from('perfis').select('nivel').eq('id', data.user.id).maybeSingle()
+      if (ativo) setPodeEditar(['admin', 'super_admin'].includes(perfil?.nivel))
+    })
+    return () => { ativo = false }
+  }, [])
+
+  useEffect(() => {
     async function carregar() {
       setCarregando(true)
       setErro(null)
       const { data, error } = await supabase
         .from('desdobrados')
-        .select('tipo, posto_graduacao, nome_guerra, data_chegada, data_previsao_retorno, situacao, qms, estado_pm')
+        .select('*')
         .eq('missao_id', missao.id)
         .order('data_chegada')
       if (error) setErro(error.message)
@@ -120,21 +135,21 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
                 <tr>
                   <th>Posto / Graduação</th>
                   <th>Nome de Guerra</th>
-                  <th>Chegada</th>
-                  <th>Previsão de Retorno</th>
+                  <th>Gênero</th>
                   <th>Situação</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {listaFiltrada.map((e, i) => (
-                  <tr key={i} className={e.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : e.tipo === 'Policial Militar' ? 'linha-efetivo-pm' : ''}>
+                  <tr key={e.id ?? i} className={e.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : e.tipo === 'Policial Militar' ? 'linha-efetivo-pm' : ''}>
                     <td>{[e.posto_graduacao, e.tipo === 'Militar do EB' ? e.qms : e.tipo === 'Policial Militar' ? `PM${(e.estado_pm ?? '').replace(/^PM/i, '').replace(/\s/g, '').toUpperCase()}` : null].filter(Boolean).join(' ')}</td>
                     <td>{e.nome_guerra}</td>
-                    <td>{formatarData(e.data_chegada)}</td>
-                    <td>{formatarData(e.data_previsao_retorno)}</td>
+                    <td><span className={e.genero === 'Masculino' ? 'ef-genero-masculino' : e.genero === 'Feminino' ? 'ef-genero-feminino' : ''}>{e.genero || '—'}</span></td>
                     <td>
                       <span className={`badge-sit ${CLASSE_SITUACAO[e.situacao] ?? 'cinza'}`}>{e.situacao}</span>
                     </td>
+                    <td><button type="button" className="me-botao-detalhes" onClick={() => setDetalhe(e)}>Detalhes</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -142,6 +157,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
           </div>
         )}
 
+        {detalhe && <ModalDetalhesMilitar detalhe={detalhe} siglaMissao={() => missao.sigla} podeEditar={podeEditar} aoFechar={() => setDetalhe(null)} aoEditar={registro => navegar('/admin', { state: { editarDesdobrado: registro } })} />}
         <div className="me-rodape">
           <button className="botao-fechar-modal" onClick={aoFechar}>Fechar</button>
         </div>
