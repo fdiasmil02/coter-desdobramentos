@@ -40,6 +40,9 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
   const [dataRetorno, setDataRetorno] = useState(desdobrado?.data_previsao_retorno ?? '')
   const [dataRetornoReal, setDataRetornoReal] = useState(desdobrado?.data_retorno_real ?? '')
   const [situacao, setSituacao] = useState(desdobrado?.situacao ?? 'Na Missão')
+  const [leavingInicio, setLeavingInicio] = useState(desdobrado?.leaving_inicio ?? '')
+  const [leavingFim, setLeavingFim] = useState(desdobrado?.leaving_fim ?? '')
+  const [leavingDestino, setLeavingDestino] = useState(desdobrado?.leaving_destino ?? '')
   const [observacoes, setObservacoes] = useState(desdobrado?.observacoes ?? '')
   const [erro, setErro] = useState(null)
   const [modalFotoAberto, setModalFotoAberto] = useState(false)
@@ -58,6 +61,7 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
     setFotoUrl(''); setFotoPendente(null)
     setDataChegada(''); setDataRetorno(''); setDataRetornoReal('')
     setSituacao('Na Missão'); setObservacoes('')
+    setLeavingInicio(''); setLeavingFim(''); setLeavingDestino('')
     setErro(null)
   }
 
@@ -94,6 +98,10 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
     // Validação de datas: previsão de retorno não pode ser anterior à chegada
     if (dataChegada && dataRetorno && dataRetorno < dataChegada) {
       setErro('A previsão de retorno não pode ser anterior à data de chegada.')
+      return
+    }
+    if (situacao === 'Leaving' && (!leavingInicio || !leavingFim || leavingFim < leavingInicio)) {
+      setErro('Informe as datas de início e término do Leaving; o término não pode ser anterior ao início.')
       return
     }
     const registro = {
@@ -276,6 +284,13 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
             {SITUACOES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
+        {situacao === 'Leaving' && <>
+          <h3 className="secao-titulo">Período de Leaving</h3>
+          <div><label>Início do Leaving *</label><input type="date" value={leavingInicio} onChange={e => setLeavingInicio(e.target.value)} required /></div>
+          <div><label>Término do Leaving *</label><input type="date" min={leavingInicio || undefined} value={leavingFim} onChange={e => setLeavingFim(e.target.value)} required /></div>
+          <div className="campo-inteiro"><label>Provável destino (opcional) 🔒</label><input value={leavingDestino} onChange={e => setLeavingDestino(e.target.value)} placeholder="Cidade, país ou local de destino" /></div>
+          <p className="campo-inteiro ef-leaving-aviso">Após o término, o status será atualizado automaticamente para Na Missão. O período ficará preservado no histórico.</p>
+        </>}
         <div className="campo-inteiro">
           <label>Observações 🔒</label>
           <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)}
