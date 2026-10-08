@@ -120,6 +120,7 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
             <div className="ef-detalhe-identificacao">
               <h2 id="ef-detalhe-titulo">{postoFormatado(detalhe)} {detalhe.nome_guerra}</h2>
               <p className="ef-detalhe-nome-completo">{detalhe.nome_completo || '—'}</p>
+              <span className={`ef-badge-situacao ef-detalhe-status ${corSituacao(detalhe.situacao)}`}>{detalhe.situacao}</span>
             </div>
             <button type="button" className="modal-fechar ef-detalhe-fechar" aria-label="Fechar detalhes" onClick={() => setDetalhe(null)}>×</button>
           </div>
@@ -127,13 +128,7 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
             {[
               ['Tipo', detalhe.tipo],
               ['Missão', siglaMissao(detalhe.missao_id)],
-              ['Situação', detalhe.situacao],
               ['Gênero', detalhe.genero],
-              ...(detalhe.situacao === 'Leaving' ? [
-                ['Início do Leaving', detalhe.leaving_inicio ? formatarData(detalhe.leaving_inicio) : '—'],
-                ['Término do Leaving', detalhe.leaving_fim ? formatarData(detalhe.leaving_fim) : '—'],
-                ['Provável destino', detalhe.leaving_destino?.trim() || 'Não informado']
-              ] : []),
               ['Retorno previsto', formatarData(detalhe.data_previsao_retorno)],
               ['Chegada', formatarData(detalhe.data_chegada)],
               ['WhatsApp', detalhe.contato_telefone_whatsapp],
@@ -147,6 +142,16 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
               </div>
             )}
           </dl>
+          {detalhe.situacao === 'Leaving' && (
+            <section className="ef-detalhe-leaving" aria-label="Informações do Leaving">
+              <h3>MILITAR EM LEAVING</h3>
+              <dl className="ef-detalhe-grade">
+                <div><dt>Início do Leaving</dt><dd>{detalhe.leaving_inicio ? formatarData(detalhe.leaving_inicio) : '—'}</dd></div>
+                <div><dt>Término do Leaving</dt><dd>{detalhe.leaving_fim ? formatarData(detalhe.leaving_fim) : '—'}</dd></div>
+                <div className="ef-detalhe-observacoes"><dt>Provável destino</dt><dd>{detalhe.leaving_destino?.trim() || 'Não informado'}</dd></div>
+              </dl>
+            </section>
+          )}
           <div className="ef-detalhe-acoes">
             {podeEditar && <button type="button" className="botao-primario" onClick={() => { const registro = detalhe; setDetalhe(null); aoEditar?.(registro) }}>✏️ Editar cadastro</button>}
             <button type="button" className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button>
