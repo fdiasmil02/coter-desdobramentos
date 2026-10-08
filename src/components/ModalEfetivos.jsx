@@ -64,15 +64,15 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
 
         <div className="modal-stats">
               <div>
-                <span className="modal-valor">{stats ? Number(stats.efetivo_total) : 0}</span>
+                <span className="modal-valor modal-valor-branco">{stats ? Number(stats.efetivo_total) : 0}</span>
                 <span className="modal-rotulo">Efetivo Total</span>
               </div>
               <div>
-                <span className="modal-valor">{stats ? Number(stats.efetivo_eb) : 0}</span>
+                <span className="modal-valor modal-valor-verde">{stats ? Number(stats.efetivo_eb) : 0}</span>
                 <span className="modal-rotulo">Efetivo EB</span>
               </div>
               <div>
-                <span className="modal-valor">{stats ? Number(stats.efetivo_pm) : 0}</span>
+                <span className="modal-valor modal-valor-azul">{stats ? Number(stats.efetivo_pm) : 0}</span>
                 <span className="modal-rotulo">Efetivo PM</span>
               </div>
               <div>
