@@ -1,4 +1,4 @@
-import { Eye, Pencil } from 'lucide-react'
+import { Eye, Pencil } from './IconesAcoes'
 import ModalDetalhesMilitar from './ModalDetalhesMilitar'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
