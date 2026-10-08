@@ -16,6 +16,7 @@ export default function PainelAdmin() {
   const [stats, setStats] = useState([])
   const [modalMissao, setModalMissao] = useState(null)
   const [msgDesdobrado, setMsgDesdobrado] = useState(null)
+  const [desdobradoEmEdicao, setDesdobradoEmEdicao] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -59,7 +60,7 @@ export default function PainelAdmin() {
           </button>
           <button
             className={`admin-nav-botao ${aba === 'desdobrado' ? 'ativo' : ''}`}
-            onClick={() => setAba('desdobrado')}
+            onClick={() => { setDesdobradoEmEdicao(null); setAba('desdobrado') }}
           >
             📋 Cadastrar Desdobrado
           </button>
@@ -116,13 +117,13 @@ export default function PainelAdmin() {
           </section>
         )}
 
-        {aba === 'efetivo' && <EfetivoCompleto missoes={missoes} aoAtualizar={carregarDados} />}
+        {aba === 'efetivo' && <EfetivoCompleto missoes={missoes} aoEditar={registro => { setDesdobradoEmEdicao(registro); setMsgDesdobrado(null); setAba('desdobrado') }} />}
 
         {aba === 'desdobrado' && (
           <section className="admin-secao">
             <div className="admin-topo">
               <span className="admin-instrucao">
-                Cadastro de militar ou policial desdobrado — os dados entram direto no banco.
+                {desdobradoEmEdicao ? `Editando cadastro de ${desdobradoEmEdicao.nome_guerra}` : 'Cadastro de militar ou policial desdobrado — os dados entram direto no banco.'}
               </span>
             </div>
 
@@ -132,6 +133,8 @@ export default function PainelAdmin() {
               missoes={missoes}
               aoSalvar={() => {
                 carregarDados()
+                setDesdobradoEmEdicao(null)
+                setAba('efetivo')
                 setMsgDesdobrado('Desdobrado salvo com sucesso ✅')
                 setTimeout(() => setMsgDesdobrado(null), 4000)
               }}
