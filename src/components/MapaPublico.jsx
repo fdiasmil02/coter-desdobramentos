@@ -1,6 +1,7 @@
 // Mapa mundi: pins com efetivo+sigla (estilo Skip), modal colorido e tabela completa para logados
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
+import { createPortal } from 'react-dom'
 import { nomePais } from '../paises'
 import ModalEfetivos from './ModalEfetivos'
 
@@ -12,6 +13,8 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
   const refMapa = useRef(null)
   const refCamadaPaises = useRef(null)
   const refCamadaPins = useRef(null)
+  const refPopup = useRef(null)
+  const [popupElement, setPopupElement] = useState(null)
   const [missaoSelecionada, setMissaoSelecionada] = useState(null)
   const [verEfetivos, setVerEfetivos] = useState(false)
 
@@ -62,7 +65,7 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
           iconAnchor: [28, 28]
         })
         return L.marker([Number(m.latitude), Number(m.longitude)], { icon: icone })
-          .on('click', () => setMissaoSelecionada(m))
+          .on('click', () => { setVerEfetivos(false); setMissaoSelecionada(m) })
       })
     ).addTo(mapa)
   }, [missoes, statsPorMissao])
@@ -77,6 +80,30 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
     }
     aoFocarConcluido()
   }, [focoMissao, missoes, aoFocarConcluido])
+
+  useEffect(() => {
+    const mapa = refMapa.current
+    if (!mapa || !missaoSelecionada || verEfetivos) {
+      if (refPopup.current) { refPopup.current.remove(); refPopup.current = null }
+      setPopupElement(null)
+      return
+    }
+    const ponto = [Number(missaoSelecionada.latitude), Number(missaoSelecionada.longitude)]
+    const popup = L.popup({ className: 'popup-missao', maxWidth: 460, minWidth: 300, autoPan: true, autoPanPadding: [24, 24], closeButton: false, offset: [0, -24] })
+      .setLatLng(ponto)
+      .setContent(document.createElement('div'))
+      .openOn(mapa)
+    refPopup.current = popup
+    setPopupElement(popup.getContent())
+    const fechar = () => setMissaoSelecionada(null)
+    mapa.on('popupclose', fechar)
+    return () => {
+      setPopupElement(null)
+      mapa.off('popupclose', fechar)
+      popup.remove()
+      if (refPopup.current === popup) refPopup.current = null
+    }
+  }, [missaoSelecionada, verEfetivos])
 
   const s = missaoSelecionada ? statsPorMissao[missaoSelecionada.id] : null
 
