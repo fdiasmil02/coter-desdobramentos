@@ -1,3 +1,4 @@
+import { Eye, Pencil } from 'lucide-react'
 import ModalDetalhesMilitar from './ModalDetalhesMilitar'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
@@ -103,7 +104,7 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
                     <td><div className="ef-pessoa">{r.foto_url ? <img src={r.foto_url} alt="" /> : <span className="ef-avatar">👤</span>}<span><strong>{r.nome_guerra}</strong><small>{r.nome_completo}</small></span></div></td>
                     <td><span className={r.genero === 'Masculino' ? 'ef-genero-masculino' : r.genero === 'Feminino' ? 'ef-genero-feminino' : ''}>{r.genero || '—'}</span></td><td>{formatarData(r.data_chegada)}</td><td>{formatarData(r.data_previsao_retorno)}</td>
                     <td><span className={`ef-badge-situacao ${corSituacao(r.situacao)}`}>{r.situacao}</span></td>
-                    <td><div className="ef-acoes"><button onClick={() => setDetalhe(r)}>Detalhes</button>{podeEditar && <button onClick={() => aoEditar?.(r)}>Editar</button>}</div></td>
+                    <td><div className="ef-acoes"><button type="button" className="ef-acao-btn ef-acao-ver" onClick={() => setDetalhe(r)}><Eye size={15} aria-hidden="true" /> Detalhes</button>{podeEditar && <button type="button" className="ef-acao-btn ef-acao-editar" onClick={() => aoEditar?.(r)}><Pencil size={14} aria-hidden="true" /> Editar</button>}</div></td>
                   </tr>
                 </Fragment>
               })}
