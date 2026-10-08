@@ -221,16 +221,16 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
             placeholder="Nome de guerra (público — aparece no mapa)" />
         </div>
         <div>
-          <label>OM de origem (opcional) 🔒</label>
+          <label>OM de origem 🔒</label>
           <input value={omOrigem} onChange={e => setOmOrigem(e.target.value)} placeholder="Organização Militar de origem" />
         </div>
         <div>
-          <label>Função atual (opcional) 🔒</label>
+          <label>Função atual na missão 🔒</label>
           <input value={funcaoAtual} onChange={e => setFuncaoAtual(e.target.value)} placeholder="Função exercida na missão" />
         </div>
         <div>
-          <label>Cidade de desdobramento (opcional) 🔒</label>
-          <input value={cidadeDesdobramento} onChange={e => setCidadeDesdobramento(e.target.value)} placeholder="Cidade de desdobramento" />
+          <label>Cidade atualmente desdobrado 🔒</label>
+          <input value={cidadeDesdobramento} onChange={e => setCidadeDesdobramento(e.target.value)} placeholder="Cidade onde está atualmente desdobrado" />
         </div>
         {/* Seção 2 — Dados Sensíveis / Restritos */}
         <h3 className="secao-titulo secao-restrita">🔒 Dados Sensíveis / Restritos</h3>
@@ -250,17 +250,17 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
         <div>
           <label>Contato WhatsApp 🔒</label>
           <input value={telWhats} onChange={e => setTelWhats(e.target.value)}
-            placeholder="Telefone com DDD (opcional)" />
+            placeholder="Telefone com DDD" />
         </div>
         <div>
           <label>Contato E-mail 🔒</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="E-mail de contato (opcional)" />
+            placeholder="E-mail de contato" />
         </div>
         <div>
           <label>Documento de Referência 🔒</label>
           <input value={documento} onChange={e => setDocumento(e.target.value)}
-            placeholder="Documento de referência (opcional)" />
+            placeholder="Documento de referência" />
         </div>
         <div>
           <label>Foto do Integrante</label>
@@ -310,13 +310,13 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
           <h3 className="secao-titulo">Período de Leaving</h3>
           <div><label>Início do Leaving *</label><input type="date" value={leavingInicio} onChange={e => setLeavingInicio(e.target.value)} required /></div>
           <div><label>Término do Leaving *</label><input type="date" min={leavingInicio || undefined} value={leavingFim} onChange={e => setLeavingFim(e.target.value)} required /></div>
-          <div className="campo-inteiro"><label>Provável destino (opcional) 🔒</label><input value={leavingDestino} onChange={e => setLeavingDestino(e.target.value)} placeholder="Cidade, país ou local de destino" /></div>
+          <div className="campo-inteiro"><label>Provável destino 🔒</label><input value={leavingDestino} onChange={e => setLeavingDestino(e.target.value)} placeholder="Cidade, país ou local de destino" /></div>
           <p className="campo-inteiro ef-leaving-aviso">Após o término, o status será atualizado automaticamente para Na Missão. O período ficará preservado no histórico.</p>
         </>}
         <div className="campo-inteiro">
           <label>Observações 🔒</label>
           <textarea value={observacoes} onChange={e => setObservacoes(e.target.value)}
-            placeholder="Anotações internas (opcional — restrito)" />
+            placeholder="Anotações internas — restrito" />
         </div>
         {modalFotoAberto && (
           <RecorteFoto aoConfirmar={receberFotoRecortada} aoFechar={() => setModalFotoAberto(false)} />
