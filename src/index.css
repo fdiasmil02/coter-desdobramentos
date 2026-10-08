@@ -618,3 +618,10 @@ body {
 .ef-historico-item strong { color:#eef5ff; }
 .ef-historico-item span { color:#c9d8ec; }
 .ef-historico-item small { color:#91a8c6; }
+
+/* Badge de status junto à identificação e quadro de Leaving ao final */
+.ef-detalhe-compacto .ef-detalhe-status { margin-top:8px; font-size:.7rem; padding:4px 9px; }
+.ef-detalhe-compacto .ef-detalhe-leaving { margin:12px 20px 0; padding:15px 0 4px; border-top:1px dashed #6481a8; }
+.ef-detalhe-compacto .ef-detalhe-leaving h3 { margin:0 0 13px; color:#fbbf24; font-size:.82rem; font-weight:800; letter-spacing:.07em; }
+.ef-detalhe-compacto .ef-detalhe-leaving .ef-detalhe-grade { padding:0 0 8px; }
+@media(max-width:440px) { .ef-detalhe-compacto .ef-detalhe-leaving { margin:12px 14px 0; } }
