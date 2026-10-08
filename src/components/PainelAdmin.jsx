@@ -1,4 +1,4 @@
-// Painel admin: aba Missões (concluída) + aba Cadastrar Desdobrado (nova)
+// Painel admin: missões, efetivo completo e cadastro — atualização de publicação
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
