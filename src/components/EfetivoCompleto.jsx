@@ -1,23 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { formatarData } from '../formatos'
-import FormularioDesdobrado from './FormularioDesdobrado'
+
+const ORDEM_POSTOS = ['Gen Ex', 'Gen Div', 'Gen Bda', 'Cel', 'Ten Cel', 'Maj', 'Cap', '1º Ten', '2º Ten', 'Asp', 'S Ten', '1º Sgt', '2º Sgt', '3º Sgt', 'Cb', 'Sd']
+const ordemPosto = posto => { const i = ORDEM_POSTOS.indexOf(posto); return i === -1 ? ORDEM_POSTOS.length : i }
+const corSituacao = situacao => ({ 'Na Missão': 'na-missao', Leaving: 'leaving', Previsto: 'previsto', Estendido: 'estendido', Retornou: 'retornou' }[situacao] ?? 'outro')
 
 const SITUACOES = ['Na Missão', 'Leaving', 'Previsto', 'Estendido', 'Retornou']
 
-export default function EfetivoCompleto({ missoes, aoAtualizar }) {
+export default function EfetivoCompleto({ missoes, aoEditar }) {
   const [registros, setRegistros] = useState([])
   const [nivel, setNivel] = useState(null)
   const [busca, setBusca] = useState('')
   const [missao, setMissao] = useState('')
   const [tipo, setTipo] = useState('')
   const [situacao, setSituacao] = useState('')
-  const [editando, setEditando] = useState(null)
   const [detalhe, setDetalhe] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
-  const [excluindo, setExcluindo] = useState(null)
   const podeEditar = nivel === 'admin' || nivel === 'super_admin'
 
   async function carregar() {
@@ -44,37 +45,18 @@ export default function EfetivoCompleto({ missoes, aoAtualizar }) {
   }, [])
 
   const lista = useMemo(() => registros.filter(r => {
-    const texto = [r.nome_guerra, r.nome_completo, r.posto_graduacao, r.qms, r.estado_pm].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR')
+    const texto = Object.values(r).filter(v => v != null && typeof v !== 'object').join(' ').toLocaleLowerCase('pt-BR')
     return (!busca || texto.includes(busca.toLocaleLowerCase('pt-BR'))) &&
       (!missao || r.missao_id === missao) &&
       (!tipo || r.tipo === tipo) &&
       (!situacao || r.situacao === situacao)
-  }), [registros, busca, missao, tipo, situacao])
+  }).sort((x, y) => (missoes.find(m => m.id === x.missao_id)?.sigla ?? '').localeCompare(missoes.find(m => m.id === y.missao_id)?.sigla ?? '', 'pt-BR') || ordemPosto(x.posto_graduacao) - ordemPosto(y.posto_graduacao) || (x.nome_guerra ?? '').localeCompare(y.nome_guerra ?? '', 'pt-BR')), [registros, busca, missao, tipo, situacao, missoes])
 
   const siglaMissao = id => missoes.find(m => m.id === id)?.sigla ?? '—'
   const postoFormatado = r => [r.posto_graduacao,
     r.tipo === 'Militar do EB' ? r.qms :
       r.tipo === 'Policial Militar' ? 'PM' + (r.estado_pm ?? '').replace(/^PM/i, '').toUpperCase() : null
   ].filter(Boolean).join(' ')
-
-  async function excluir(registro) {
-    if (!podeEditar || excluindo) return
-    if (!window.confirm('Excluir definitivamente o cadastro de ' + registro.nome_guerra + '? Esta ação não pode ser desfeita.')) return
-    setExcluindo(registro.id)
-    const { error } = await supabase.from('desdobrados').delete().eq('id', registro.id)
-    setExcluindo(null)
-    if (error) { setErro(error.message); return }
-    setAviso('Cadastro excluído com sucesso.')
-    await carregar()
-    aoAtualizar?.()
-  }
-
-  async function salvo() {
-    setEditando(null)
-    setAviso('Cadastro atualizado com sucesso.')
-    await carregar()
-    aoAtualizar?.()
-  }
 
   return (
     <section className="admin-secao">
@@ -88,13 +70,13 @@ export default function EfetivoCompleto({ missoes, aoAtualizar }) {
       {aviso && <div className="msg-sucesso">{aviso}</div>}
       {erro && <div className="aviso-erro">{erro}</div>}
       <div className="ef-filtros">
-        <input aria-label="Pesquisar efetivo" placeholder="Pesquisar nome, posto ou QMS..." value={busca} onChange={e => setBusca(e.target.value)} />
+        <input aria-label="Pesquisar efetivo" placeholder="Busca livre" value={busca} onChange={e => setBusca(e.target.value)} />
         <select aria-label="Filtrar missão" value={missao} onChange={e => setMissao(e.target.value)}>
           <option value="">Todas as missões</option>
           {missoes.map(m => <option key={m.id} value={m.id}>{m.sigla}</option>)}
         </select>
         <select aria-label="Filtrar tipo" value={tipo} onChange={e => setTipo(e.target.value)}>
-          <option value="">EB e PM</option>
+          <option value="">Todos os Militares</option>
           <option value="Militar do EB">Exército Brasileiro</option>
           <option value="Policial Militar">Polícia Militar</option>
         </select>
@@ -107,19 +89,22 @@ export default function EfetivoCompleto({ missoes, aoAtualizar }) {
       {carregando ? <p className="carregando">Carregando efetivo…</p> :
         <div className="tabela-wrap">
           <table className="tabela-efetivos ef-tabela">
-            <thead><tr><th>Militar / Policial</th><th>Posto / Grad.</th><th>Missão</th><th>Chegada</th><th>Retorno previsto</th><th>Situação</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Posto / Grad.</th><th>Militar / Policial</th><th>Gênero</th><th>Chegada</th><th>Retorno previsto</th><th>Situação</th><th>Ações</th></tr></thead>
             <tbody>
-              {lista.map(r => <tr key={r.id} className={r.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : 'linha-efetivo-pm'}>
-                <td><div className="ef-pessoa">{r.foto_url ? <img src={r.foto_url} alt="" /> : <span className="ef-avatar">👤</span>}<span><strong>{r.nome_guerra}</strong><small>{r.nome_completo}</small></span></div></td>
-                <td>{postoFormatado(r)}</td><td>{siglaMissao(r.missao_id)}</td><td>{formatarData(r.data_chegada)}</td>
-                <td>{formatarData(r.data_previsao_retorno)}</td>
-                <td><span className="badge-sit azul">{r.situacao}</span></td>
-                <td><div className="ef-acoes">
-                  <button onClick={() => setDetalhe(r)}>Detalhes</button>
-                  {podeEditar && <button onClick={() => setEditando(r)}>Editar</button>}
-                  {podeEditar && <button className="ef-excluir" disabled={excluindo === r.id} onClick={() => excluir(r)}>Excluir</button>}
-                </div></td>
-              </tr>)}
+              {lista.map((r, i) => {
+                const sigla = siglaMissao(r.missao_id)
+                const inicioGrupo = i === 0 || siglaMissao(lista[i - 1].missao_id) !== sigla
+                return <Fragment key={r.id}>
+                  {inicioGrupo && <tr className="ef-grupo-missao"><th colSpan={7} scope="rowgroup">{sigla} — {lista.filter(item => item.missao_id === r.missao_id).length} integrante(s)</th></tr>}
+                  <tr className={r.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : 'linha-efetivo-pm'}>
+                    <td><strong>{postoFormatado(r)}</strong></td>
+                    <td><div className="ef-pessoa">{r.foto_url ? <img src={r.foto_url} alt="" /> : <span className="ef-avatar">👤</span>}<span><strong>{r.nome_guerra}</strong><small>{r.nome_completo}</small></span></div></td>
+                    <td>{r.genero || '—'}</td><td>{formatarData(r.data_chegada)}</td><td>{formatarData(r.data_previsao_retorno)}</td>
+                    <td><span className={`ef-badge-situacao ${corSituacao(r.situacao)}`}>{r.situacao}</span></td>
+                    <td><div className="ef-acoes"><button onClick={() => setDetalhe(r)}>Detalhes</button>{podeEditar && <button onClick={() => aoEditar(r)}>Editar</button>}</div></td>
+                  </tr>
+                </Fragment>
+              })}
             </tbody>
           </table>
           {!lista.length && <p className="carregando">Nenhum registro encontrado.</p>}
@@ -134,12 +119,7 @@ export default function EfetivoCompleto({ missoes, aoAtualizar }) {
           <div className="me-rodape"><button className="botao-fechar-modal" onClick={() => setDetalhe(null)}>Fechar</button></div>
         </div>
       </div>}
-      {editando && podeEditar && <div className="modal-overlay" onClick={() => setEditando(null)}>
-        <div className="modal-efetivos-caixa ef-editor" onClick={e => e.stopPropagation()}>
-          <div className="modal-cabecalho"><h2>Editar — {editando.nome_guerra}</h2><button className="modal-fechar" onClick={() => setEditando(null)}>×</button></div>
-          <FormularioDesdobrado key={editando.id} missoes={missoes} desdobrado={editando} aoSalvar={salvo} aoCancelar={() => setEditando(null)} />
-        </div>
-      </div>}
+
     </section>
   )
 }
