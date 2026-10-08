@@ -34,10 +34,11 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
     let ativo = true
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data?.user) { if (ativo) setErro('Sessão não encontrada. Entre novamente.'); return }
-      const { data: nivelBanco, error } = await supabase.rpc('meu_nivel')
+      const { data: perfil, error } = await supabase.from('perfis').select('nivel').eq('id', data.user.id).maybeSingle()
       if (ativo) {
-        setNivel(error ? null : nivelBanco)
+        setNivel(error ? null : perfil?.nivel ?? null)
         if (error) setErro('Não foi possível confirmar as permissões de edição: ' + error.message)
+        else if (!perfil?.nivel) setErro('Seu usuário não possui perfil de acesso cadastrado. Contate o administrador.')
       }
     })
     carregar()
