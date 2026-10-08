@@ -54,7 +54,7 @@ export default function PainelAdmin() {
           >
             🗺️ Missões de Paz
           </button>
-          <button className="admin-nav-botao" disabled title="Próxima entrega">
+          <button className={`admin-nav-botao ${aba === 'efetivo' ? 'ativo' : ''}`} onClick={() => setAba('efetivo')}>
             👥 Efetivo Completo (com restritos)
           </button>
           <button
