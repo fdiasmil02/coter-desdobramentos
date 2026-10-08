@@ -625,3 +625,6 @@ body {
 .ef-detalhe-compacto .ef-detalhe-leaving h3 { margin:0 0 13px; color:#fbbf24; font-size:.82rem; font-weight:800; letter-spacing:.07em; }
 .ef-detalhe-compacto .ef-detalhe-leaving .ef-detalhe-grade { padding:0 0 8px; }
 @media(max-width:440px) { .ef-detalhe-compacto .ef-detalhe-leaving { margin:12px 14px 0; } }
+
+/* Foto do modal de detalhes 20% maior (54x58 -> 65x70), sem alterar o restante do layout */
+.ef-detalhe-compacto .ef-detalhe-foto { width:65px; height:70px; flex-basis:65px; }
