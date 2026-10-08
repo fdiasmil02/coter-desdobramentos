@@ -13,6 +13,18 @@ export default function App() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
   const [focoMissao, setFocoMissao] = useState(null)
+  const [logado, setLogado] = useState(false)
+
+  useEffect(() => {
+    let ativo = true
+    supabase.auth.getSession().then(({ data }) => {
+      if (ativo) setLogado(Boolean(data.session))
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (ativo) setLogado(Boolean(session))
+    })
+    return () => { ativo = false; subscription.unsubscribe() }
+  }, [])
 
   useEffect(() => {
     async function carregarDados() {
