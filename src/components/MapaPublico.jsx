@@ -95,7 +95,7 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
       .openOn(mapa)
     refPopup.current = popup
     setPopupElement(popup.getContent())
-    const fechar = () => setMissaoSelecionada(null)
+    const fechar = () => { setMissaoSelecionada(atual => atual?.id === missaoSelecionada.id ? null : atual) }
     mapa.on('popupclose', fechar)
     return () => {
       setPopupElement(null)
@@ -126,9 +126,9 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
         </span>
       </div>
 
-      {missaoSelecionada && !verEfetivos && (
-        <div className="modal-overlay" onClick={() => setMissaoSelecionada(null)}>
-          <div className="modal" onClick={evento => evento.stopPropagation()}>
+      {missaoSelecionada && !verEfetivos && popupElement && createPortal(
+        
+          <div className="modal modal-pin" onClick={evento => evento.stopPropagation()}>
             <div className="modal-cabecalho">
               <div>
                 <div className="modal-sigla">{missaoSelecionada.sigla}</div>
@@ -141,15 +141,15 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
             <p className="modal-nome">{missaoSelecionada.nome_completo}</p>
             <div className="modal-stats">
               <div>
-                <span className="modal-valor">{s ? Number(s.efetivo_total) : 0}</span>
+                <span className="modal-valor modal-valor-branco">{s ? Number(s.efetivo_total) : 0}</span>
                 <span className="modal-rotulo">Efetivo Total</span>
               </div>
               <div>
-                <span className="modal-valor">{s ? Number(s.efetivo_eb) : 0}</span>
+                <span className="modal-valor modal-valor-verde">{s ? Number(s.efetivo_eb) : 0}</span>
                 <span className="modal-rotulo">Efetivo EB</span>
               </div>
               <div>
-                <span className="modal-valor">{s ? Number(s.efetivo_pm) : 0}</span>
+                <span className="modal-valor modal-valor-azul">{s ? Number(s.efetivo_pm) : 0}</span>
                 <span className="modal-rotulo">Efetivo PM</span>
               </div>
               <div>
@@ -171,8 +171,7 @@ export default function MapaPublico({ missoes, statsPorMissao, logado, focoMissa
                 Dados individuais dos efetivos são visíveis apenas para a equipe logada.
               </p>
             )}
-          </div>
-        </div>
+          </div>, popupElement
       )}
 
       {missaoSelecionada && verEfetivos && (
