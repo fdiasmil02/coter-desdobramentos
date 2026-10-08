@@ -553,3 +553,7 @@ body {
 .ef-badge-situacao.estendido { color:#c4b5fd; background:rgba(139,92,246,.16); }
 .ef-badge-situacao.retornou { color:#cbd5e1; background:rgba(148,163,184,.16); }
 .ef-badge-situacao.outro { color:#e2e8f0; background:#334155; }
+
+/* Gênero: contraste de texto independente da cor EB/PM da linha */
+.ef-tabela td .ef-genero-masculino { color:#93c5fd; font-weight:700; }
+.ef-tabela td .ef-genero-feminino { color:#f9a8d4; font-weight:700; }
