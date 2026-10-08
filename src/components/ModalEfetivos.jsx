@@ -127,7 +127,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
               </thead>
               <tbody>
                 {listaFiltrada.map((e, i) => (
-                  <tr key={i}>
+                  <tr key={i} className={e.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : e.tipo === 'Policial Militar' ? 'linha-efetivo-pm' : ''}>
                     <td>{[e.posto_graduacao, e.tipo === 'Militar do EB' ? e.qms : e.tipo === 'Policial Militar' ? `PM${(e.estado_pm ?? '').replace(/^PM/i, '').replace(/\s/g, '').toUpperCase()}` : null].filter(Boolean).join(' ')}</td>
                     <td>{e.nome_guerra}</td>
                     <td>{formatarData(e.data_chegada)}</td>
