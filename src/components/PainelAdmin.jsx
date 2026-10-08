@@ -6,6 +6,7 @@ import { nomePais } from '../paises'
 import BarraSuperior from './BarraSuperior'
 import FormularioMissao from './FormularioMissao'
 import FormularioDesdobrado from './FormularioDesdobrado'
+import EfetivoCompleto from './EfetivoCompleto'
 
 export default function PainelAdmin() {
   const navegar = useNavigate()
@@ -115,6 +116,8 @@ export default function PainelAdmin() {
           </section>
         )}
 
+        {aba === 'efetivo' && <EfetivoCompleto missoes={missoes} aoAtualizar={carregarDados} />}
+
         {aba === 'desdobrado' && (
           <section className="admin-secao">
             <div className="admin-topo">
@@ -128,6 +131,7 @@ export default function PainelAdmin() {
             <FormularioDesdobrado
               missoes={missoes}
               aoSalvar={() => {
+                carregarDados()
                 setMsgDesdobrado('Desdobrado salvo com sucesso ✅')
                 setTimeout(() => setMsgDesdobrado(null), 4000)
               }}
