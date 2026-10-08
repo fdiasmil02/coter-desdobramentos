@@ -1,6 +1,6 @@
 // Painel admin: missões, efetivo completo e cadastro — atualização de publicação
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { nomePais } from '../paises'
 import BarraSuperior from './BarraSuperior'
@@ -10,6 +10,7 @@ import EfetivoCompleto from './EfetivoCompleto'
 
 export default function PainelAdmin() {
   const navegar = useNavigate()
+  const location = useLocation()
   const [verificando, setVerificando] = useState(true)
   const [aba, setAba] = useState('missoes') // 'missoes' | 'desdobrado'
   const [missoes, setMissoes] = useState([])
@@ -17,6 +18,15 @@ export default function PainelAdmin() {
   const [modalMissao, setModalMissao] = useState(null)
   const [msgDesdobrado, setMsgDesdobrado] = useState(null)
   const [desdobradoEmEdicao, setDesdobradoEmEdicao] = useState(null)
+
+  useEffect(() => {
+    const registro = location.state?.editarDesdobrado
+    if (!registro?.id) return
+    setDesdobradoEmEdicao(registro)
+    setMsgDesdobrado(null)
+    setAba('desdobrado')
+    navegar(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navegar])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
