@@ -6,6 +6,7 @@ import { nomePais } from '../paises'
 import BarraSuperior from './BarraSuperior'
 import FormularioMissao from './FormularioMissao'
 import FormularioDesdobrado from './FormularioDesdobrado'
+import ImportarDesdobrados from './ImportarDesdobrados'
 import EfetivoCompleto from './EfetivoCompleto'
 
 export default function PainelAdmin() {
@@ -138,6 +139,8 @@ export default function PainelAdmin() {
             </div>
 
             {msgDesdobrado && <div className="msg-sucesso">{msgDesdobrado}</div>}
+
+            {!desdobradoEmEdicao && <ImportarDesdobrados missoes={missoes} aoImportar={carregarDados} />}
 
             <FormularioDesdobrado
               key={desdobradoEmEdicao?.id ?? 'novo'}
