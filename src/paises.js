@@ -11,7 +11,9 @@ const NOMES_PAISES = {
   EGY: 'Egito',
   HTI: 'Haiti',
   COL: 'Colômbia',
-  COD: 'República Democrática do Congo'
+  COD: 'República Democrática do Congo',
+  ITA: 'Itália',
+  SOM: 'Somália'
 }
 
 // Lista ordenada para dropdowns de formulário (código + nome)
