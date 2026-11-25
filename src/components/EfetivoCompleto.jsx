@@ -8,9 +8,9 @@ const ORDEM_POSTOS = ['Gen Ex', 'Gen Div', 'Gen Bda', 'Cel', 'Ten Cel', 'Maj', '
 const ordemPosto = posto => { const i = ORDEM_POSTOS.indexOf(posto); return i === -1 ? ORDEM_POSTOS.length : i }
 const corSituacao = situacao => ({ 'Na Missão': 'na-missao', Leaving: 'leaving', Previsto: 'previsto', Estendido: 'estendido', Retornou: 'retornou' }[situacao] ?? 'outro')
 
-const SITUACOES = ['Na Missão', 'Leaving', 'Previsto', 'Estendido', 'Retornou']
+const SITUACOES = ['Na Missão', 'Leaving', 'Previsto', 'Estendido']
 
-export default function EfetivoCompleto({ missoes, aoEditar }) {
+export default function EfetivoCompleto({ missoes, aoEditar, retornados = false, avisoExterno }) {
   const [registros, setRegistros] = useState([])
   const [nivel, setNivel] = useState(null)
   const [busca, setBusca] = useState('')
@@ -26,7 +26,8 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
   async function carregar() {
     setCarregando(true)
     setErro('')
-    const { data, error } = await supabase.from('desdobrados').select('*').order('nome_guerra')
+    const consulta = supabase.from('desdobrados').select('*')
+    const { data, error } = await (retornados ? consulta.eq('situacao', 'Retornou') : consulta.neq('situacao', 'Retornou')).order('nome_guerra')
     if (error) setErro(error.message)
     setRegistros(data ?? [])
     setCarregando(false)
@@ -45,7 +46,7 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
     })
     carregar()
     return () => { ativo = false }
-  }, [])
+  }, [retornados])
 
   const lista = useMemo(() => registros.filter(r => {
     const texto = Object.values(r).filter(v => v != null && typeof v !== 'object').join(' ').toLocaleLowerCase('pt-BR')
@@ -65,12 +66,12 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
     <section className="admin-secao">
       <div className="admin-topo">
         <div>
-          <h2>Efetivo Completo <span className="ef-badge-restrito">🔒 Acesso autenticado</span></h2>
-          <p className="admin-instrucao">Consulta de efetivos e dados administrativos por missão.</p>
+          <h2>{retornados ? 'Militares Retornados' : 'Efetivo Completo'} <span className="ef-badge-restrito">🔒 Acesso autenticado</span></h2>
+          <p className="admin-instrucao">{retornados ? 'Histórico de militares e policiais que retornaram de missão.' : 'Consulta de efetivos e dados administrativos por missão, sem retornados.'}</p>
         </div>
         <button className="botao-secundario-form" onClick={carregar}>↻ Atualizar</button>
       </div>
-      {aviso && <div className="msg-sucesso">{aviso}</div>}
+      {(avisoExterno || aviso) && <div className="msg-sucesso">{avisoExterno || aviso}</div>}
       {erro && <div className="aviso-erro">{erro}</div>}
       <div className="ef-filtros">
         <input aria-label="Pesquisar efetivo" placeholder="Busca livre" value={busca} onChange={e => setBusca(e.target.value)} />
@@ -83,16 +84,16 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
           <option value="Militar do EB">Exército Brasileiro</option>
           <option value="Policial Militar">Polícia Militar</option>
         </select>
-        <select aria-label="Filtrar situação" value={situacao} onChange={e => setSituacao(e.target.value)}>
+        {!retornados && <select aria-label="Filtrar situação" value={situacao} onChange={e => setSituacao(e.target.value)}>
           <option value="">Todas as situações</option>
           {SITUACOES.map(s => <option key={s}>{s}</option>)}
-        </select>
+        </select>}
       </div>
       <p className="ef-contagem">{lista.length} registro(s) encontrado(s)</p>
       {carregando ? <p className="carregando">Carregando efetivo…</p> :
         <div className="tabela-wrap">
           <table className="tabela-efetivos ef-tabela">
-            <thead><tr><th>Posto / Grad.</th><th>Militar / Policial</th><th>Gênero</th><th>Chegada</th><th>Retorno previsto</th><th>Situação</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Posto / Grad.</th><th>Militar / Policial</th><th>Gênero</th><th>Chegada</th><th>{retornados ? 'Retorno real' : 'Retorno previsto'}</th><th>Situação</th><th>Ações</th></tr></thead>
             <tbody>
               {lista.map((r, i) => {
                 const sigla = siglaMissao(r.missao_id)
@@ -102,7 +103,7 @@ export default function EfetivoCompleto({ missoes, aoEditar }) {
                   <tr className={r.tipo === 'Militar do EB' ? 'linha-efetivo-eb' : 'linha-efetivo-pm'}>
                     <td><strong>{postoFormatado(r)}</strong></td>
                     <td><div className="ef-pessoa">{r.foto_url ? <img src={r.foto_url} alt="" /> : <span className="ef-avatar">👤</span>}<span><strong>{r.nome_guerra}</strong><small>{r.nome_completo}</small></span></div></td>
-                    <td><span className={r.genero === 'Masculino' ? 'ef-genero-masculino' : r.genero === 'Feminino' ? 'ef-genero-feminino' : ''}>{r.genero || '—'}</span></td><td>{formatarData(r.data_chegada)}</td><td>{formatarData(r.data_previsao_retorno)}</td>
+                    <td><span className={r.genero === 'Masculino' ? 'ef-genero-masculino' : r.genero === 'Feminino' ? 'ef-genero-feminino' : ''}>{r.genero || '—'}</span></td><td>{formatarData(r.data_chegada)}</td><td>{formatarData(retornados ? r.data_retorno_real : r.data_previsao_retorno)}</td>
                     <td><span className={`ef-badge-situacao ${corSituacao(r.situacao)}`}>{r.situacao}</span></td>
                     <td><div className="ef-acoes"><button type="button" className="ef-acao-btn ef-acao-ver" onClick={() => setDetalhe(r)}><Eye size={15} aria-hidden="true" /> Detalhes</button>{podeEditar && <button type="button" className="ef-acao-btn ef-acao-editar" onClick={() => aoEditar?.(r)}><Pencil size={14} aria-hidden="true" /> Editar</button>}</div></td>
                   </tr>
