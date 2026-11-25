@@ -3,16 +3,16 @@ import { supabase } from '../supabaseClient'
 import { nomePais } from '../paises'
 
 const W=1280,H=720
-const STORAGE='bcs-layout-v2'
+const STORAGE='bcs-layout-v2-map-v1'
 const ATIVOS=['Na Missão','Leaving','Estendido']
 const MAPA='https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
 const POS={
- MINURSO:[130,89,222,120], MINUSCA:[406,80,253,125],
- UNGSC:[711,89,174,116], UNHQ:[711,89,174,116],
- UNFICYP:[1040,104,222,112], UNIFIL:[1100,298,170,115],
- UNTMIS:[1030,433,238,118], UNMISS:[780,552,254,116],
- MONUSCO:[480,538,269,130], UNVMC:[24,220,236,122],
- DH:[8,371,335,183]
+ MINURSO:[285,86,220,120], MINUSCA:[415,438,240,125],
+ UNGSC:[527,86,193,120], UNHQ:[527,86,193,120],
+ UNFICYP:[743,86,205,120], UNIFIL:[1041,86,215,120],
+ UNTMIS:[1041,330,215,125], UNMISS:[1030,475,226,125],
+ MONUSCO:[675,475,330,125], UNVMC:[24,210,218,125],
+ DH:[24,345,345,174]
 }
 const TITULOS={UNGSC:'UNHQ',UNTMIS:'UNTMIS/UNSOM',DH:'DESMINAGEM HUMANITÁRIA'}
 const NOMES={MINURSO:'Saara Ocidental',MINUSCA:'República Centro-Africana',MONUSCO:'República Democrática do Congo',UNMISS:'Sudão do Sul',UNIFIL:'Líbano',UNFICYP:'Chipre',UNVMC:'Colômbia',UNTMIS:'Somália',UNGSC:'Brindisi – Itália',UNHQ:'Brindisi – Itália',DH:'Colômbia'}
@@ -37,33 +37,32 @@ function dataBR(d){
  const v=k=>p.find(x=>x.type===k)?.value
  return v('day')+' '+['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][Number(v('month'))-1]+' '+v('year')
 }
-const proj=(lon,lat)=>[(Number(lon)+180)*W/360,73+(83-Number(lat))*594/145]
+const proj=(lon,lat)=>[(Number(lon)+180)*W/360,73+(83-Number(lat))*570/145]
 function poligono(g){
  const ps=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[]
  return ps.map(p=>p.map(r=>r.map((pt,i)=>{const [x,y]=proj(pt[0],pt[1]);return (i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)}).join('')+'Z').join('')).join('')
 }
 function posicao(m,i,layout){return layout[m.sigla]||POS[m.sigla]||[355+(i%3)*220,205+Math.floor(i%9/3)*105,210,100]}
+const NAVY='#142D46', ONU='#27654F', OEA='#93651A', LOG='#315F86', INK='#183348', MUTED='#50697B'
 function linhas(m,s,grupos){
- const a=[{t:TITULOS[m.sigla]||m.sigla,size:23,bold:true}]
+ const a=[{t:TITULOS[m.sigla]||m.sigla,size:22,bold:true,color:'#FFFFFF'}]
+ a.push({t:(NOMES[m.sigla]||nomePais(m.pais))+(['UNGSC','UNHQ'].includes(m.sigla)?' · Base Log ONU':''),size:15,color:MUTED})
+ a.push({t:'EB  '+s.eb+'     |     PM  '+s.pm,size:23,bold:true,color:INK})
+ a.push({t:'Mulheres: '+(s.feb+s.fpm)+'  ('+s.feb+' EB / '+s.fpm+' PM)',size:13,color:ONU})
+ a.push({t:'Leaving: '+(s.leb+s.lpm)+'  ('+s.leb+' EB / '+s.lpm+' PM)',size:13,color:s.leb||s.lpm?OEA:MUTED})
  if(m.sigla==='DH'){
-   for(let i=0;i<4;i++)a.push({t:GRUPOS[i]+': '+grupos[GRUPOS[i]],size:19,bold:true})
-   if(grupos['Não identificado'])a.push({t:'Não identificado: '+grupos['Não identificado'],size:15})
-   a.push({t:'(Colômbia) — EB: '+s.eb+' Mil'+(s.pm?' | PM: '+s.pm:''),size:19,bold:true})
-   if(s.feb||s.fpm)a.push({t:'Mulheres: '+(s.feb+s.fpm),size:15})
- }else{
-   if(['UNGSC','UNHQ'].includes(m.sigla))a.push({t:'Base Log ONU',size:16})
-   a.push({t:'('+(NOMES[m.sigla]||nomePais(m.pais))+')',size:17})
-   if(s.eb||!s.pm)a.push({t:'EB: '+s.eb+' Mil'+(s.feb?' ('+s.feb+'F)':''),size:21,bold:true})
-   if(s.pm)a.push({t:'PM: '+s.pm+(s.fpm?' ('+s.fpm+'F)':''),size:21,bold:true})
+   a.push({t:'GMI  '+grupos.GMI+'    •    GATI  '+grupos.GATI,size:18,bold:true,color:OEA})
+   a.push({t:'MIADH  '+grupos.MIADH+'    •    CIDES  '+grupos.CIDES,size:18,bold:true,color:OEA})
+   if(grupos['Não identificado'])a.push({t:'Sem grupo: '+grupos['Não identificado'],size:14,bold:true,color:OEA})
  }
- if(s.leb||s.lpm)a.push({t:'Leaving/CTO: '+[s.leb?s.leb+' EB':null,s.lpm?s.lpm+' PM':null].filter(Boolean).join(' + '),size:15,italic:true})
  return a
 }
 function blocosTexto(ls,x,y,w,h){
- const total=ls.reduce((s,l)=>s+l.size+3,0)
- const k=Math.min(1,(h-12)/total)
- let cur=y+(h-total*k)/2
- return ls.map(l=>{const size=l.size*k;const altura=(l.size+3)*k;const b={...l,size,x:x+5,y:cur,w:w-10,h:altura};cur+=altura;return b})
+ const head=ls[0], body=ls.slice(1), available=h-31-7
+ const total=body.reduce((s,l)=>s+l.size+2,0), k=Math.min(1,available/total)
+ let cur=y+31+(available-total*k)/2
+ const headerSize=Math.min(head.size,(w-16)/(Math.max(1,head.t.length)*.58))
+ return [{...head,size:headerSize,x:x+8,y:y+2,w:w-16,h:27},...body.map(l=>{const size=Math.min(l.size*k,(w-14)/(Math.max(1,l.t.length)*.55));const altura=(l.size+2)*k;const b={...l,size,x:x+7,y:cur,w:w-14,h:altura};cur+=altura;return b})]
 }
 function seta(b,m){
  const [x,y,w,h]=b
@@ -73,7 +72,7 @@ function seta(b,m){
  return [cx+dx*k,cy+dy*k,tx,ty]
 }
 async function svgPNG(svg,largura){
- const xml=new XMLSerializer().serializeToString(svg)
+ const copia=svg.cloneNode(true);copia.setAttribute('width',String(W));copia.setAttribute('height',String(H));copia.style.width=W+'px';copia.style.height=H+'px';copia.style.maxHeight='none';const xml=new XMLSerializer().serializeToString(copia)
  const url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml;charset=utf-8'}))
  try{
   const img=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(new Error('Falha ao renderizar o slide.'));i.src=url})
@@ -85,160 +84,124 @@ async function svgPNG(svg,largura){
 function baixar(url,nome){const a=document.createElement('a');a.href=url;a.download=nome;a.click()}
 function textoSVG(t,i){return <text key={i} x={t.x+t.w/2} y={t.y+t.h/2} dominantBaseline="central" textAnchor="middle" fontSize={t.size} fontWeight={t.bold?'700':'400'} fontStyle={t.italic?'italic':'normal'} fill={t.color||'#172117'}>{t.t}</text>}
 
-
-const C={navy:'#142D46',blue:'#1D5278',teal:'#087F83',gold:'#B98220',ink:'#142D46',muted:'#536B80',paper:'#F2F5F8',white:'#FFFFFF',line:'#D7E0E8'}
-const MAP={x:24,y:226,w:720,h:320}
-const project=(lon,lat)=>[MAP.x+(Number(lon)+180)*MAP.w/360,MAP.y+(83-Number(lat))*MAP.h/145]
-function mapPath(g){
- const ps=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[]
- return ps.map(p=>p.map(r=>r.map((pt,i)=>{const [x,y]=project(pt[0],pt[1]);return (i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)}).join('')+'Z').join('')).join('')
-}
-const isDH=m=>m.sigla==='DH'
-const label=m=>TITULOS[m.sigla]||m.sigla
-function scene(dados){
- const {lista,rows,dh,grupos}=dados
- const total=resumo(rows),oea=resumo(dh),onu=resumo(rows.filter(r=>!dh.some(d=>d.id===r.id)))
- const missions=lista.filter(m=>!isDH(m))
- const data=dataBR(dados.data)
- const rects=[],texts=[],lines=[]
- const rect=(x,y,w,h,fill,r=0)=>rects.push({x,y,w,h,fill,r})
- const txt=(t,x,y,w,h,size,opt={})=>texts.push({t:String(t),x,y,w,h,size,color:C.ink,...opt})
- rect(0,0,W,H,C.paper);rect(0,0,W,79,C.navy)
- txt('Ch Mis Paz Av/IGPM / Divisão de Missão de Paz',91,9,920,32,26,{bold:true,color:C.white,align:'left'})
- txt('BRIEFING DE CONSCIÊNCIA SITUACIONAL  /  MISSÕES DE PAZ',92,42,920,25,15,{color:'#B9D5E8',align:'left'})
- txt('ATUALIZADO EM',1032,10,157,23,12,{color:'#B9D5E8',bold:true})
- txt(data,1032,34,157,31,22,{color:C.white,bold:true})
- const metrics=[
- ['EFETIVO TOTAL',total.total,total.eb+' EB  •  '+total.pm+' PM',C.navy],
- ['EXÉRCITO',total.eb,'Militares desdobrados',C.blue],
- ['POLÍCIA MILITAR',total.pm,'Policiais desdobrados',C.blue],
- ['MULHERES',total.feb+total.fpm,total.feb+' EB  •  '+total.fpm+' PM',C.teal],
- ['LEAVING / CTO',total.leb+total.lpm,total.leb+' EB  •  '+total.lpm+' PM',C.gold]]
- metrics.forEach(([title,n,sub,color],i)=>{const x=24+i*248;rect(x,93,240,91,C.white,10);rect(x,93,5,91,color,2);txt(title,x+16,100,208,20,13,{bold:true,color:C.muted,align:'left'});txt(n,x+16,121,208,39,34,{bold:true,color,align:'left'});txt(sub,x+16,159,208,17,13,{color:C.muted,align:'left'})})
- rect(24,197,720,349,C.white,12)
- txt('PRESENÇA INTERNACIONAL',40,201,520,24,17,{bold:true,align:'left'})
- txt('● ONU    ● OEA / DH',540,203,190,20,12,{color:C.muted})
- rect(24,555,720,130,C.white,10)
- txt('DESMINAGEM HUMANITÁRIA  /  COLÔMBIA',40,561,680,24,18,{bold:true,align:'left'})
- const subgroups=GRUPOS.slice(0,4)
- subgroups.forEach((g,i)=>{const x=40+i*174;rect(x,591,164,60,'#F8F0DE',7);txt(g,x+8,594,148,20,14,{bold:true,color:C.gold,align:'left'});txt(grupos[g],x+8,615,148,30,26,{bold:true,align:'left'})})
- txt('OEA: '+(Number(grupos.GMI>0)+Number(grupos.GATI>0)+Number(grupos.MIADH+grupos.CIDES>0))+' missões  •  '+oea.eb+' EB  •  '+oea.pm+' PM  •  Mulheres: '+(oea.feb+oea.fpm)+'  •  Leaving: '+(oea.leb+oea.lpm)+(grupos['Não identificado']?'  •  Sem grupo: '+grupos['Não identificado']:''),40,654,690,24,13,{color:C.muted,align:'left'})
- rect(756,197,500,488,C.white,12)
- txt('EFETIVO POR MISSÃO',772,201,470,24,17,{bold:true,align:'left'})
- txt('ONU: '+missions.length+' missões  •  '+onu.eb+' EB  •  '+onu.pm+' PM',772,226,470,23,14,{color:C.muted,align:'left'})
- const cols=[['MISSÃO / PAÍS',772,224],['EB',996,56],['PM',1052,56],['F',1108,56],['LEAVE',1164,76]]
- rect(768,255,476,27,C.navy,4)
- cols.forEach(([t,x,w])=>txt(t,x,255,w,27,12,{bold:true,color:C.white,align:t==='MISSÃO / PAÍS'?'left':'center'}))
- const rh=Math.min(43,Math.floor(390/Math.max(1,missions.length)))
- missions.forEach((m,i)=>{
-  const y=284+i*rh,s=resumo(rows.filter(r=>r.missao_id===m.id))
-  rect(768,y,476,rh-1,i%2?'#F3F6F9':'#FFFFFF')
-  txt(label(m),774,y,218,rh*.53,Math.min(16,rh*.40),{bold:true,align:'left'})
-  txt(NOMES[m.sigla]||nomePais(m.pais),774,y+rh*.51,218,rh*.45,Math.min(12,rh*.28),{color:C.muted,align:'left'})
-  const vals=[s.eb,s.pm,s.feb+'/'+s.fpm,s.leb+'/'+s.lpm]
-  cols.slice(1).forEach((col,j)=>txt(vals[j],col[1],y,col[2],rh,Math.min(18,rh*.44),{bold:true,color:j===2?C.teal:j===3?C.gold:C.ink}))
- })
- txt('F e LEAVE: EB / PM',772,658,470,19,12,{color:C.muted,align:'left'})
- rect(0,694,W,26,C.navy)
- txt('DIVISÃO DE MISSÃO DE PAZ   •   EFETIVO ATUALMENTE DESDOBRADO',24,694,900,26,12,{color:'#D5E5F0',bold:true,align:'left'})
- txt('BCS  /  V2',1060,694,196,26,12,{color:C.white,bold:true,align:'right'})
- return {rects,texts,lines,total,oea,onu,missions,data}
-}
-function T({t}){
- return <text x={t.align==='left'?t.x:t.align==='right'?t.x+t.w:t.x+t.w/2} y={t.y+t.h/2} dominantBaseline="central" textAnchor={t.align==='left'?'start':t.align==='right'?'end':'middle'} fontSize={t.size} fontWeight={t.bold?'700':'400'} fill={t.color||C.ink}>{t.t}</text>
-}
 export default function BriefingBCSV2(){
- const [dados,setDados]=useState(null),[geo,setGeo]=useState(null),[erro,setErro]=useState(''),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[resolucao,setResolucao]=useState('1920')
- const ref=useRef(null),area=useRef(null)
+ const [dados,setDados]=useState(null),[geo,setGeo]=useState(null),[erro,setErro]=useState(''),[aviso,setAviso]=useState(''),[carregando,setCarregando]=useState(false),[exportando,setExportando]=useState(false),[edicao,setEdicao]=useState(false),[resolucao,setResolucao]=useState('1920')
+ const [layout,setLayout]=useState(()=>{try{return JSON.parse(localStorage.getItem(STORAGE)||'{}')||{}}catch{return {}}})
+ const svgRef=useRef(null),areaRef=useRef(null),drag=useRef(null)
  async function carregar(){
-  setLoading(true);setErro('');setDados(null);setGeo(null)
+  setCarregando(true);setErro('');setAviso('');setGeo(null)
   try{
-   const {data:u,error:eu}=await supabase.auth.getUser()
-   if(eu||!u?.user)throw new Error('Faça login.')
-   const {data:p,error:ep}=await supabase.from('perfis').select('nivel').eq('id',u.user.id).maybeSingle()
-   if(ep||!['admin','super_admin'].includes(p?.nivel))throw new Error('Acesso administrativo necessário.')
-   const {data:ms,error:em}=await supabase.from('missoes').select('id,sigla,pais,qg_missao,status,latitude,longitude').order('sigla')
+   const {data:userData,error:userError}=await supabase.auth.getUser()
+   if(userError||!userData?.user)throw new Error('Entre no sistema para gerar o BCS.')
+   const {data:perfil,error:perfilError}=await supabase.from('perfis').select('nivel').eq('id',userData.user.id).maybeSingle()
+   if(perfilError||!['admin','super_admin'].includes(perfil?.nivel))throw new Error('A geração do BCS exige perfil administrativo.')
+   const {data:missoes,error:em}=await supabase.from('missoes').select('id,sigla,pais,qg_missao,status,latitude,longitude').order('sigla')
    if(em)throw em
-   const rows=[]
-   for(let i=0;;i+=500){
-    const {data,error}=await supabase.from('desdobrados').select('id,missao_id,tipo,genero,situacao,funcao_atual,cidade_desdobramento').in('situacao',ATIVOS).order('id').range(i,i+499)
+   let rows=[]
+   for(let inicio=0;;inicio+=500){
+    const {data,error}=await supabase.from('desdobrados').select('id,missao_id,tipo,genero,situacao,funcao_atual,cidade_desdobramento').in('situacao',ATIVOS).order('id').range(inicio,inicio+499)
     if(error)throw error
     rows.push(...(data||[]));if((data||[]).length<500)break
    }
-   const lista=(ms||[]).filter(m=>m.status==='Ativa'||rows.some(r=>r.missao_id===m.id))
-   const dh=rows.filter(r=>lista.some(m=>isDH(m)&&m.id===r.missao_id))
-   const grupos=Object.fromEntries(GRUPOS.map(g=>[g,0]));dh.forEach(r=>grupos[grupoDH(r)]++)
-   const res=await fetch(MAPA);if(!res.ok)throw new Error('Mapa indisponível.')
-   const g=await res.json();if(!Array.isArray(g.features))throw new Error('Mapa inválido.')
-   setGeo(g);setDados({lista,rows,dh,grupos,data:new Date()})
-  }catch(e){setErro(e.message||'Erro ao carregar BCS.')}finally{setLoading(false)}
+   const lista=(missoes||[]).filter(m=>m.status==='Ativa'||rows.some(r=>r.missao_id===m.id))
+   const grupos=Object.fromEntries(GRUPOS.map(g=>[g,0]))
+   const dhIds=new Set(lista.filter(m=>m.sigla==='DH').map(m=>m.id))
+   const dh=rows.filter(r=>dhIds.has(r.missao_id))
+   dh.forEach(r=>grupos[grupoDH(r)]++)
+   const resposta=await fetch(MAPA)
+   if(!resposta.ok)throw new Error('Mapa geográfico indisponível.')
+   setGeo(await resposta.json());setDados({lista,rows,dh,grupos,data:new Date()})
+  }catch(e){setErro(e.message||'Não foi possível atualizar o BCS.')}finally{setCarregando(false)}
  }
  useEffect(()=>{carregar()},[])
- const s=dados?scene(dados):null
- const paises=new Set(dados?.lista.map(m=>m.pais)||[])
- // Pontos agrupados por proximidade no mapa; lista ao lado contém todos os quantitativos.
- const pontos=[]
- for(const m of dados?.lista||[]){
-  if(m.latitude==null||m.longitude==null)continue
-  const [x,y]=project(m.longitude,m.latitude)
-  if(!Number.isFinite(x)||!Number.isFinite(y))continue
-  const existente=pontos.find(p=>Math.hypot(p.x-x,p.y-y)<10)
-  if(existente){existente.n++;existente.dh=existente.dh||isDH(m)}
-  else pontos.push({x,y,n:1,dh:isDH(m)})
+ const lista=dados?.lista||[],rows=dados?.rows||[],grupos=dados?.grupos||Object.fromEntries(GRUPOS.map(g=>[g,0]))
+ const cards=lista.map((m,i)=>{const s=resumo(rows.filter(r=>r.missao_id===m.id)),b=posicao(m,i,layout);return {m,s,b,ls:blocosTexto(linhas(m,s,grupos),...b),fill:m.sigla==='DH'?OEA:['UNGSC','UNHQ'].includes(m.sigla)?LOG:ONU}})
+ const total=resumo(rows),oea=resumo(dados?.dh||[]),onu=resumo(rows.filter(r=>!(dados?.dh||[]).some(d=>d.id===r.id)))
+ const qtdONU=lista.filter(m=>m.sigla!=='DH').length
+ const qtdOEA=Number(grupos.GMI>0)+Number(grupos.GATI>0)+Number(grupos.MIADH+grupos.CIDES>0)
+ const data=dados?dataBR(dados.data):''
+ const paises=new Set(lista.map(m=>m.pais))
+ const resumoQuadro=[
+ {titulo:'ONU',fundo:ONU,linhas:[qtdONU+' missões',onu.eb+' EB  /  '+onu.pm+' PM']},
+ {titulo:'OEA / DH',fundo:OEA,linhas:[qtdOEA+' missões',oea.eb+' EB  /  '+oea.pm+' PM']},
+ {titulo:'MULHERES',fundo:LOG,linhas:[(total.feb+total.fpm)+' desdobradas',total.feb+' EB  /  '+total.fpm+' PM']},
+ {titulo:'LEAVING / CTO',fundo:OEA,linhas:[(total.leb+total.lpm)+' integrantes',total.leb+' EB  /  '+total.lpm+' PM']}
+ ]
+ const rodape='TOTAL DE MILITARES DESDOBRADOS: '+total.total+'  |  '+total.eb+' EB  +  '+total.pm+' PM'
+ const quadros=resumoQuadro.map((q,i)=>({...q,x:24+i*309,y:618,w:303,h:52}))
+ function ponto(e){const p=svgRef.current.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svgRef.current.getScreenCTM().inverse())}
+ function iniciar(e,c){if(!edicao)return;e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);const p=ponto(e);drag.current={sigla:c.m.sigla,dx:p.x-c.b[0],dy:p.y-c.b[1],w:c.b[2],h:c.b[3]}}
+ function mover(e){if(!drag.current)return;const d=drag.current,p=ponto(e);setLayout(old=>({...old,[d.sigla]:[Math.max(0,Math.min(W-d.w,p.x-d.dx)),Math.max(75,Math.min(610-d.h,p.y-d.dy)),d.w,d.h]}))}
+ async function exportarPNG(){
+  setExportando(true);setErro('')
+  try{baixar(await svgPNG(svgRef.current,Number(resolucao)),'BCS-V2-'+data.replace(/ /g,'-')+'.png')}catch(e){setErro(e.message)}finally{setExportando(false)}
  }
- async function exportar(tipo){
-  if(!s||!ref.current)return
-  setBusy(true);setErro('')
-  const nome='BCS-V2-'+s.data.replace(/ /g,'-')
+ async function exportarPPTX(){
+  setExportando(true);setErro('')
   try{
-   if(tipo==='png'){baixar(await svgPNG(ref.current,Number(resolucao)),nome+'.png');return}
    const {default:PptxGenJS}=await import('pptxgenjs')
-   const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='Divisão de Missão de Paz';pptx.title='BCS V2 - '+s.data
-   const slide=pptx.addSlide(),X=v=>v/96
-   for(const r of s.rects)slide.addShape(r.r?pptx.ShapeType.roundRect:pptx.ShapeType.rect,{x:X(r.x),y:X(r.y),w:X(r.w),h:X(r.h),rectRadius:.08,fill:{color:r.fill.slice(1)},line:{transparency:100,color:r.fill.slice(1)}})
-   const svg=ref.current.cloneNode(true)
-   for(const el of [...svg.children])if(el.getAttribute('data-map')!=='true'&&el.tagName.toLowerCase()!=='defs')el.remove()
-   // Recorta o mapa, para não cobrir os elementos editáveis do PowerPoint.
-   svg.setAttribute('viewBox',MAP.x+' '+MAP.y+' '+MAP.w+' '+MAP.h)
-   svg.setAttribute('width',String(MAP.w));svg.setAttribute('height',String(MAP.h))
-   const xml=new XMLSerializer().serializeToString(svg)
-   const url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml;charset=utf-8'}))
-   try{
-    const img=await new Promise((ok,fail)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>fail(new Error('Mapa não renderizado.'));i.src=url})
-    const canvas=document.createElement('canvas');canvas.width=MAP.w*2;canvas.height=MAP.h*2;canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height)
-    slide.addImage({data:canvas.toDataURL('image/png'),x:X(MAP.x),y:X(MAP.y),w:X(MAP.w),h:X(MAP.h)})
-   }finally{URL.revokeObjectURL(url)}
-   for(const t of s.texts)slide.addText(t.t,{x:X(t.x),y:X(t.y),w:X(t.w),h:X(t.h),fontFace:'Arial',fontSize:t.size*.75,bold:!!t.bold,color:(t.color||C.ink).slice(1),align:t.align||'center',valign:'mid',margin:0,fit:'shrink'})
-   slide.addImage({data:LOGO_ESQ,x:X(24),y:X(8),w:X(49),h:X(64)})
-   slide.addImage({data:LOGO_DIR,x:X(1205),y:X(7),w:X(50),h:X(64)})
-   await pptx.writeFile({fileName:nome+'.pptx'})
-  }catch(e){setErro(e.message||'Erro na exportação.')}finally{setBusy(false)}
+   const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='Divisão de Missão de Paz';pptx.subject='Briefing de Consciência Situacional';pptx.title='BCS - '+data
+   const slide=pptx.addSlide(),X=v=>v/96,Y=v=>v/96
+   const rect=(x,y,w,h,color,round=false)=>slide.addShape(round?pptx.ShapeType.roundRect:pptx.ShapeType.rect,{x:X(x),y:Y(y),w:X(w),h:Y(h),rectRadius:.12,fill:{color:color.replace('#','')},line:{color:color.replace('#',''),transparency:100}})
+   const txt=(t)=>slide.addText(t.t,{x:X(t.x),y:Y(t.y),w:X(t.w),h:Y(t.h),fontFace:'Arial',fontSize:t.size*.75,bold:!!t.bold,italic:!!t.italic,color:(t.color||'#172117').replace('#',''),align:t.align||'center',valign:'mid',margin:0,breakLine:false,fit:'shrink'})
+   // Apenas o mapa é rasterizado; caixas, textos, rodapé, tabela e setas continuam editáveis.
+   const mapaSvg=svgRef.current.cloneNode(true)
+   for(const el of [...mapaSvg.children])if(el.getAttribute('data-map')!=='true'&&el.tagName.toLowerCase()!=='defs')el.remove()
+   slide.addImage({data:await svgPNG(mapaSvg,2560),x:0,y:0,w:X(W),h:Y(H)})
+   rect(0,0,W,74,NAVY)
+   txt({t:'Ch Mis Paz Av/IGPM / Divisão de Missão de Paz',x:95,y:5,w:1090,h:42,size:28,bold:true,color:'#FFFFFF'})
+   txt({t:'BRIEFING DE CONSCIÊNCIA SITUACIONAL  •  MISSÕES DE PAZ',x:95,y:45,w:1090,h:22,size:14,bold:true,color:'#BDD7E8'})
+   slide.addImage({data:LOGO_ESQ,x:X(30),y:Y(8),w:X(48),h:Y(64)})
+   slide.addImage({data:LOGO_DIR,x:X(1197),y:Y(7),w:X(55),h:Y(65)})
+   for(const c of cards){
+    if(c.m.latitude==null||c.m.longitude==null)continue
+    const [x1,y1,x2,y2]=seta(c.b,c.m)
+    slide.addShape(pptx.ShapeType.line,{x:X(Math.min(x1,x2)),y:Y(Math.min(y1,y2)),w:X(Math.abs(x2-x1)),h:Y(Math.abs(y2-y1)),flipH:x2<x1,flipV:y2<y1,line:{color:c.fill.slice(1),width:1.7,endArrowType:'triangle'}})
+   }
+   for(const c of cards){const [x,y,w,h]=c.b;rect(x,y,w,h,'#FFFFFF',true);rect(x,y,w,31,c.fill);c.ls.forEach(txt)}
+   quadros.forEach(q=>{rect(q.x,q.y,q.w,q.h,'#FFFFFF',true);rect(q.x,q.y,5,q.h,q.fundo);txt({t:q.titulo,x:q.x+10,y:q.y+2,w:110,h:21,size:13,bold:true,color:q.fundo,align:'left'});txt({t:q.linhas[0],x:q.x+125,y:q.y+2,w:q.w-133,h:21,size:15,bold:true,align:'right'});txt({t:q.linhas[1],x:q.x+10,y:q.y+24,w:q.w-20,h:24,size:18,bold:true})})
+   rect(0,678,W,42,NAVY)
+   txt({t:rodape,x:24,y:678,w:950,h:42,size:21,color:'#FFFFFF',bold:true,align:'left'})
+   txt({t:'Atualizado em '+data,x:980,y:678,w:276,h:42,size:17,bold:true,color:'#FFFFFF'})
+   await pptx.writeFile({fileName:'BCS-V2-'+data.replace(/ /g,'-')+'.pptx'})
+  }catch(e){setErro('Erro ao exportar PowerPoint: '+e.message)}finally{setExportando(false)}
  }
+ const podeExportar=!!dados&&!!geo&&!carregando&&!exportando
  return <section className="admin-secao">
-  <div className="admin-topo"><div><h2>BCS V2 — Visão executiva</h2><p className="admin-instrucao">Modelo institucional 16:9 com indicadores, mapa e quadro de efetivos.</p></div></div>
-  <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:14}}>
-   <button className="botao-secundario-form" disabled={loading||busy} onClick={carregar}>↻ Atualizar dados</button>
-   <button className="botao-secundario-form" disabled={!s} onClick={()=>area.current?.requestFullscreen?.().catch(()=>setErro('Tela cheia indisponível.'))}>⛶ Tela cheia</button>
+  <div className="admin-topo"><div><h2>Briefing de Consciência Situacional — BCS V2</h2><p className="admin-instrucao">Mapa ampliado, cartões de missão e indicadores consolidados.</p></div></div>
+  <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:12}}>
+   <button className="botao-secundario-form" onClick={carregar} disabled={carregando||exportando}>↻ Atualizar dados</button>
+   <button className="botao-secundario-form" onClick={()=>setEdicao(v=>!v)} disabled={!dados}>{edicao?'✓ Concluir edição':'✥ Editar posições'}</button>
+   <button className="botao-secundario-form" onClick={()=>{try{localStorage.setItem(STORAGE,JSON.stringify(layout));setAviso('Layout salvo neste navegador.')}catch{setErro('Não foi possível salvar o layout.')}}}>Salvar layout</button>
+   <button className="botao-secundario-form" onClick={()=>{setLayout({});try{localStorage.removeItem(STORAGE)}catch{}setAviso('Layout original restaurado.')}}>Restaurar layout</button>
+   <button className="botao-secundario-form" onClick={()=>areaRef.current?.requestFullscreen?.().catch(()=>setErro('Tela cheia indisponível.'))} disabled={!dados}>⛶ Tela cheia</button>
    <select aria-label="Resolução PNG" value={resolucao} onChange={e=>setResolucao(e.target.value)}><option value="1920">PNG Full HD</option><option value="3840">PNG 4K</option></select>
-   <button className="botao-primario" disabled={!s||busy||loading} onClick={()=>exportar('png')}>Exportar PNG</button>
-   <button className="botao-primario" disabled={!s||busy||loading} onClick={()=>exportar('pptx')}>Exportar PPTX</button>
+   <button className="botao-primario" disabled={!podeExportar} onClick={exportarPNG}>Exportar PNG</button>
+   <button className="botao-primario" disabled={!podeExportar} onClick={exportarPPTX}>Exportar PPTX</button>
   </div>
   {erro&&<div className="aviso-erro" role="alert">{erro}</div>}
-  {(loading||busy)&&<p>{loading?'Atualizando dados…':'Gerando arquivo…'}</p>}
-  {s&&<div ref={area} style={{background:C.paper,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid #bac6d0'}}>
-   <svg ref={ref} xmlns="http://www.w3.org/2000/svg" viewBox={'0 0 '+W+' '+H} width={W} height={H} style={{width:'100%',height:'auto',maxHeight:'100vh',fontFamily:'Arial, sans-serif',display:'block'}} role="img" aria-label="BCS V2, visão executiva">
-    <defs><clipPath id="bcs2-clip"><rect {...MAP}/></clipPath></defs>
-    {s.rects.map((r,i)=><rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} rx={r.r} fill={r.fill}/>)}
-    <g data-map="true" clipPath="url(#bcs2-clip)">
-     <rect {...MAP} fill="#E8F0F5"/>
-     {geo.features.filter(f=>f.id!=='ATA'&&f.geometry).map((f,i)=><path key={f.id||i} d={mapPath(f.geometry)} fill={paises.has(f.id)?'#6FA4C4':'#CDDCE5'} stroke="#F3F7FA" strokeWidth=".65" fillRule="evenodd"/>)}
-     {pontos.map((p,i)=><g key={i}><circle cx={p.x} cy={p.y} r={p.n>1?8:5} fill={p.dh?C.gold:C.blue} stroke="#fff" strokeWidth="1.5"/>{p.n>1&&<text x={p.x} y={p.y} dominantBaseline="central" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">{p.n}</text>}</g>)}
-    </g>
-    {s.texts.map((t,i)=><T key={i} t={t}/>)}
-    <image href={LOGO_ESQ} x="24" y="8" width="49" height="64"/>
-    <image href={LOGO_DIR} x="1205" y="7" width="50" height="64"/>
+  {aviso&&<div className="msg-sucesso" role="status">{aviso}</div>}
+  {carregando&&<p>Atualizando dados e mapa…</p>}
+  {exportando&&<p>Gerando arquivo…</p>}
+  {edicao&&<p>Arraste as caixas das missões; as setas acompanham a posição. Salve o layout para reutilizá-lo neste navegador.</p>}
+  {!!grupos['Não identificado']&&<p className="aviso-erro">{grupos['Não identificado']} integrante(s) da DH sem grupo identificado. Confira função e cidade.</p>}
+  {dados&&<div ref={areaRef} style={{background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid #bac6d0'}}>
+   <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:'auto',maxHeight:'100vh',fontFamily:'Arial, sans-serif',display:'block',touchAction:edicao?'none':'auto'}} role="img" aria-label="Slide do Briefing de Consciência Situacional">
+    <defs><marker id="bcs-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#E92626"/></marker><clipPath id="bcs-mapclip"><rect x="0" y="73" width={W} height="570"/></clipPath></defs>
+    <g data-map="true"><rect width={W} height={H} fill="#EAF2F7"/><g clipPath="url(#bcs-mapclip)">{geo?.features?.filter(f=>f.id!=='ATA'&&f.geometry).map((f,i)=><path key={f.id||i} d={poligono(f.geometry)} fill={paises.has(f.id)?'#93B7A6':'#B8CDD9'} stroke="#F1F6F9" strokeWidth=".7" fillRule="evenodd"/>)}</g></g>
+    <rect x="0" y="0" width={W} height="74" fill={NAVY}/>
+    {textoSVG({t:'Ch Mis Paz Av/IGPM / Divisão de Missão de Paz',x:95,y:5,w:1090,h:42,size:28,bold:true,color:'#fff'},'cab')}
+    {textoSVG({t:'BRIEFING DE CONSCIÊNCIA SITUACIONAL  •  MISSÕES DE PAZ',x:95,y:45,w:1090,h:22,size:14,bold:true,color:'#BDD7E8'},'sub')}
+    <image href={LOGO_ESQ} x="30" y="8" width="48" height="64"/>
+    <image href={LOGO_DIR} x="1197" y="7" width="55" height="65"/>
+    {cards.filter(c=>c.m.latitude!=null&&c.m.longitude!=null).map(c=>{const [x1,y1,x2,y2]=seta(c.b,c.m);return <g key={c.m.id}><line x1={x1} y1={y1} x2={x2} y2={y2} stroke={c.fill} strokeWidth="2.5" strokeLinecap="round"/><circle cx={x2} cy={y2} r="5" fill={c.fill} stroke="#fff" strokeWidth="1.5"/></g>})}
+    {cards.map(c=><g key={c.m.id} onPointerDown={e=>iniciar(e,c)} onPointerMove={mover} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} style={{cursor:edicao?'grab':'default'}}><rect x={c.b[0]} y={c.b[1]} width={c.b[2]} height={c.b[3]} rx="9" fill="#FFFFFF" stroke={edicao?'#25445E':c.fill} strokeWidth="1.5"/><rect x={c.b[0]} y={c.b[1]} width={c.b[2]} height="31" rx="5" fill={c.fill}/>{c.ls.map(textoSVG)}</g>)}
+    {quadros.map(q=><g key={q.titulo}><rect x={q.x} y={q.y} width={q.w} height={q.h} rx="7" fill="#FFFFFF"/><rect x={q.x} y={q.y} width="5" height={q.h} rx="2" fill={q.fundo}/><text x={q.x+10} y={q.y+16} fontSize="13" fontWeight="bold" fill={q.fundo}>{q.titulo}</text><text x={q.x+q.w-8} y={q.y+16} textAnchor="end" fontSize="15" fontWeight="bold" fill={INK}>{q.linhas[0]}</text>{textoSVG({t:q.linhas[1],x:q.x+10,y:q.y+24,w:q.w-20,h:24,size:18,bold:true,color:INK},'val')}</g>)}
+    <rect y="678" width={W} height="42" fill={NAVY}/>
+    <text x="24" y="699" dominantBaseline="central" fontSize="21" fontWeight="bold" fill="#fff">{rodape}</text>
+    {textoSVG({t:'Atualizado em '+data,x:980,y:678,w:276,h:42,size:17,bold:true,color:'#FFFFFF'},'data')}
    </svg>
   </div>}
-  {s&&<p style={{fontSize:13,marginTop:10}}>F = mulheres; LEAVE = Leaving/CTO. Os valores separados por barra indicam EB / PM. CIDES integra a MIADH na contagem de missões OEA. Retornados e previstos não entram no efetivo atual.</p>}
+  {dados&&<p style={{fontSize:13,marginTop:10}}>Total: {total.total} integrantes. ONU: {onu.total}. OEA/DH: {oea.total}. Mulheres: {total.feb+total.fpm}. Leaving: {total.leb+total.lpm}. CIDES integra a MIADH na contagem de missões OEA. {GRUPOS.slice(0,4).map((g,i)=>g+' — '+GRUPOS_NOMES[i]+': '+grupos[g]).join(' · ')}</p>}
  </section>
 }
