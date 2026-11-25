@@ -8,6 +8,7 @@ import FormularioMissao from './FormularioMissao'
 import FormularioDesdobrado from './FormularioDesdobrado'
 import ImportarDesdobrados from './ImportarDesdobrados'
 import EfetivoCompleto from './EfetivoCompleto'
+import BriefingBCS from './BriefingBCS'
 
 export default function PainelAdmin() {
   const navegar = useNavigate()
@@ -81,7 +82,10 @@ export default function PainelAdmin() {
           <button className="admin-nav-botao" disabled title="Próxima entrega">
             📊 Relatórios de Rotação
           </button>
+          <button className={`admin-nav-botao ${aba === 'bcs' ? 'ativo' : ''}`} onClick={() => setAba('bcs')}>📊 Briefing – BCS</button>
         </nav>
+
+        {aba === 'bcs' && <BriefingBCS />}
 
         {aba === 'missoes' && (
           <section className="admin-secao">
