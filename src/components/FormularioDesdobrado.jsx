@@ -161,7 +161,7 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
     }
 
     setAguardando(false)
-    aoSalvar()
+    aoSalvar(salvo)
   }
 
   const listaPostos = tipo === 'Policial Militar' ? POSTOS_PM : POSTOS_EB
@@ -306,6 +306,7 @@ export default function FormularioDesdobrado({ missoes, desdobrado, aoSalvar, ao
             {SITUACOES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
+        {situacao === 'Retornou' && <p className="campo-inteiro ef-leaving-aviso">Ao salvar, o integrante será movido para Militares Retornados. Se o Retorno Real estiver vazio, será usada a data de hoje em Brasília.</p>}
         {situacao === 'Leaving' && <>
           <h3 className="secao-titulo">Período de Leaving</h3>
           <div><label>Início do Leaving *</label><input type="date" value={leavingInicio} onChange={e => setLeavingInicio(e.target.value)} required /></div>
