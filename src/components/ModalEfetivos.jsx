@@ -44,6 +44,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
         .from('desdobrados')
         .select('*')
         .eq('missao_id', missao.id)
+        .in('situacao', ['Na Missão', 'Leaving', 'Estendido'])
         .order('data_chegada')
       if (error) setErro(error.message)
       setEfetivos(data ?? [])
@@ -112,9 +113,7 @@ export default function ModalEfetivos({ missao, stats, aoFechar }) {
             <option value="Todas">Todas Situações</option>
             <option value="Na Missão">Na Missão</option>
             <option value="Leaving">Leaving</option>
-            <option value="Previsto">Previsto</option>
             <option value="Estendido">Estendido</option>
-            <option value="Retornou">Retornou</option>
           </select>
           <select className="efetivos-select" value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
             <option value="Todos">Todos Tipos</option>
