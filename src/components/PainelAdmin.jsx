@@ -75,6 +75,9 @@ export default function PainelAdmin() {
           >
             📋 Cadastrar Desdobrado
           </button>
+          <button className={`admin-nav-botao ${aba === 'retornados' ? 'ativo' : ''}`} onClick={() => { setMsgDesdobrado(null); setAba('retornados') }}>
+            🏠 Militares Retornados
+          </button>
           <button className="admin-nav-botao" disabled title="Próxima entrega">
             📊 Relatórios de Rotação
           </button>
@@ -128,7 +131,7 @@ export default function PainelAdmin() {
           </section>
         )}
 
-        {aba === 'efetivo' && <EfetivoCompleto missoes={missoes} aoEditar={registro => { setDesdobradoEmEdicao(registro); setMsgDesdobrado(null); setAba('desdobrado') }} />}
+        {(aba === 'efetivo' || aba === 'retornados') && <EfetivoCompleto key={aba} retornados={aba === 'retornados'} avisoExterno={msgDesdobrado} missoes={missoes} aoEditar={registro => { setDesdobradoEmEdicao(registro); setMsgDesdobrado(null); setAba('desdobrado') }} />}
 
         {aba === 'desdobrado' && (
           <section className="admin-secao">
@@ -145,12 +148,12 @@ export default function PainelAdmin() {
             <FormularioDesdobrado
               key={desdobradoEmEdicao?.id ?? 'novo'}
               desdobrado={desdobradoEmEdicao}
-              aoCancelar={desdobradoEmEdicao ? () => { setDesdobradoEmEdicao(null); setAba('efetivo') } : undefined}
+              aoCancelar={desdobradoEmEdicao ? () => { setDesdobradoEmEdicao(null); setAba(desdobradoEmEdicao.situacao === 'Retornou' ? 'retornados' : 'efetivo') } : undefined}
               missoes={missoes}
-              aoSalvar={() => {
+              aoSalvar={salvo => {
                 carregarDados()
                 setDesdobradoEmEdicao(null)
-                setAba('efetivo')
+                setAba(salvo?.situacao === 'Retornou' ? 'retornados' : 'efetivo')
                 setMsgDesdobrado(desdobradoEmEdicao ? 'Cadastro atualizado com sucesso ✅' : 'Desdobrado salvo com sucesso ✅')
                 setTimeout(() => setMsgDesdobrado(null), 4000)
               }}
