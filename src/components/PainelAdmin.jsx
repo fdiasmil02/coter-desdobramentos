@@ -9,6 +9,7 @@ import FormularioDesdobrado from './FormularioDesdobrado'
 import ImportarDesdobrados from './ImportarDesdobrados'
 import EfetivoCompleto from './EfetivoCompleto'
 import BriefingBCS from './BriefingBCS'
+import BriefingBCSV2 from './BriefingBCSV2'
 
 export default function PainelAdmin() {
   const navegar = useNavigate()
@@ -83,7 +84,10 @@ export default function PainelAdmin() {
             📊 Relatórios de Rotação
           </button>
           <button className={`admin-nav-botao ${aba === 'bcs' ? 'ativo' : ''}`} onClick={() => setAba('bcs')}>📊 Briefing – BCS</button>
+          <button className={`admin-nav-botao ${aba === 'bcs2' ? 'ativo' : ''}`} onClick={() => setAba('bcs2')}>📊 BCS V2</button>
         </nav>
+
+        {aba === 'bcs2' && <BriefingBCSV2 />}
 
         {aba === 'bcs' && <BriefingBCS />}
 
